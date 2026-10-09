@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KI-Unterrichtsbaukasten</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            pink: '#FDECEF',
+                            pinkDark: '#E48897',
+                            dark: '#111111',
+                            gray: '#F5F5F5',
+                            border: '#E5E5E5',
+                            text: '#333333'
+                        }
+                    },
+                    boxShadow: {
+                        'brutalist': '4px 4px 0px 0px rgba(228, 136, 151, 1)',
+                        'brutalist-hover': '2px 2px 0px 0px rgba(228, 136, 151, 1)',
+                        'brutalist-black': '4px 4px 0px 0px rgba(17, 17, 17, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fafafa;
+            background-image: 
+                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Custom scrollbar for better appearance if content overflows */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-brand-text min-h-screen flex flex-col font-sans selection:bg-brand-pink selection:text-brand-dark">
+
+    <header class="bg-white border-b border-brand-border px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-4">
+            <!-- Neues Logo anstelle des X-Buttons -->
+            <div class="w-10 h-10 bg-brand-pink rounded-xl flex items-center justify-center border-2 border-brand-pinkDark shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.29 7 12 12 20.71 7"></polyline>
+                    <line x1="12" y1="22" x2="12" y2="12"></line>
+                </svg>
+            </div>
+            <div class="flex flex-col justify-center">
+                <h1 class="font-bold text-lg leading-tight text-brand-dark">KI-<br>Unterrichtsbaukasten</h1>
+                <p class="text-[10px] sm:text-xs text-gray-500 font-medium mt-1">Gecodet mit ❤️ für die LAA/NQ RS des StS Gera</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- 3-Punkte Menü bleibt als Abschluss erhalten -->
+            <button class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+        <div class="bg-white border border-brand-border rounded-3xl w-full max-w-2xl overflow-hidden shadow-lg relative">
+            
+            <!-- Window Decoration -->
+            <div class="bg-white px-6 py-4 border-b border-brand-border flex gap-2">
+                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="h-1 w-full bg-gray-100 relative">
+                <div id="progressBar" class="h-full bg-brand-pinkDark transition-all duration-300 w-1/3"></div>
+            </div>
+
+            <div class="p-6 md:p-8">
+                <nav class="flex items-center justify-between mb-8 text-sm font-semibold text-gray-500 relative">
+                    <!-- Step 1 -->
+                    <div class="flex items-center gap-2 z-10 bg-white pr-2" id="nav-step-1">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-brand-pinkDark bg-brand-pinkDark text-white transition-colors duration-300" id="indicator-1">1</div>
+                        <span class="text-brand-dark transition-colors duration-300" id="label-1">Aufgabe</span>
+                    </div>
+                    
+                    <div class="flex-grow border-t border-gray-300 mx-2"></div>
+                    
+                    <!-- Step 2 -->
+                    <div class="flex items-center gap-2 z-10 bg-white px-2" id="nav-step-2">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 transition-colors duration-300" id="indicator-2">2</div>
+                        <span class="transition-colors duration-300" id="label-2">Details</span>
+                    </div>
+
+                    <div class="flex-grow border-t border-gray-300 mx-2"></div>
+
+                    <!-- Step 3 -->
+                    <div class="flex items-center gap-2 z-10 bg-white pl-2" id="nav-step-3">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 transition-colors duration-300" id="indicator-3">3</div>
+                        <span class="transition-colors duration-300" id="label-3">Prompt</span>
+                    </div>
+                </nav>
+
+                <!-- View 1: Was brauchst du gerade? -->
+                <div id="view-1" class="transition-opacity duration-300">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-brand-dark mb-2">Was brauchst du gerade?</h2>
+                    <p class="text-gray-500 mb-6 text-sm">Wähle aus, für was du einen Prompt brauchst</p>
+                    
+                    <!-- FÜR DEN UNTERRICHT Kategorie -->
+                    <div class="mb-6">
+                        <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-3 border-b border-gray-200 pb-2">Für den Unterricht</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-brand-pink border-2 border-brand-pinkDark rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:shadow-brutalist transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-pinkDark active-selection">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527-.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"></path></svg>
+                                <span>Ganze Stunde planen</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
+                                <span>Ganze Reihe planen</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
+                                <span>Unterrichtseinstieg</span>
+                            </button>
+                            
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                                <span>Arbeitsblatt</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                <span>Text vereinfachen</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                                <span>Differenzierung</span>
+                            </button>
+                            
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                <span>Wochenplan</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                <span>Quiz</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <span>Lerngrafik</span>
+                            </button>
+                            
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                <span>Vokabeltest</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
+                                <span>Exit-Ticket</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- BEWERTEN & KOMMUNIZIEREN Kategorie -->
+                    <div class="mb-8">
+                        <h3 class="text-xs font-bold text-gray-400 tracking-wider uppercase mb-3 border-b border-gray-200 pb-2">Bewerten & Kommunizieren</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3">
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
+                                <span>Klassenarbeit</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                                <span>Bewertungsraster</span>
+                            </button>
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                <span>Feedback geben</span>
+                            </button>
+                            
+                            <button class="task-btn flex items-center gap-2 sm:gap-2.5 bg-white border border-gray-200 rounded-xl p-2 sm:p-3 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                                <span>Elternbrief</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button onclick="goToStep(2)" class="w-full bg-brand-dark text-white rounded-xl py-4 font-bold text-lg hover:bg-black transition-colors shadow-[4px_4px_0px_0px_rgba(228,136,151,1)] relative group border border-brand-dark">
+                        Auswählen und weiter →
+                    </button>
+                </div>
+
+                <div id="view-2" class="hidden transition-opacity duration-300 flex flex-col h-[65vh] md:h-auto">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-brand-dark mb-4">Worum geht es?</h2>
+                    
+                    <div class="space-y-4 mb-6 overflow-y-auto pr-2 flex-grow">
+                        <div>
+                            <label class="block text-sm font-bold text-brand-dark mb-1">Fach <span class="text-brand-pinkDark">*</span></label>
+                            <input type="text" id="input-fach" value="Deutsch" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-brand-dark mb-1">Jahrgangsstufe <span class="text-brand-pinkDark">*</span></label>
+                            <input type="text" id="input-klasse" value="Klasse 5" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-brand-dark mb-1">Bundesland / Land</label>
+                            <input type="text" id="input-bundesland" value="Thüringen" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-brand-dark mb-1">Schulform</label>
+                            <input type="text" id="input-schulform" value="Regelschule" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-brand-dark mb-1">Thema der Stunde <span class="text-brand-pinkDark">*</span></label>
+                            <input type="text" id="input-thema" value="Typische Merkmale eines Märchen erkennen" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-brand-dark mb-1">Zentrales Lernziel: Was sollen die Schüler:innen am Ende wissen/können? <span class="text-brand-pinkDark">*</span></label>
+                            <textarea id="input-lernziel" rows="2" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors resize-none">Typische Merkmale eines Märchen erkennen und benennen</textarea>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-200">
+                            <label class="block text-sm font-bold text-brand-dark mb-3">Was ist dir beim Ergebnis besonders wichtig?</label>
+                            <div class="flex flex-wrap gap-2">
+                                <button class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Wenig Vorbereitungsaufwand</button>
+                                <button class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Viel Schüleraktivität</button>
+                                <button class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Besondere Bedürfnisse</button>
+                                <button class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Digitale Ausstattung</button>
+                                <button class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Spielerisch</button>
+                                <button class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Anspruchsvoll</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4 border-t border-gray-100 mt-auto">
+                        <button onclick="goToStep(1)" class="w-1/3 bg-white text-brand-dark border-2 border-brand-dark rounded-xl py-3 font-bold md:text-lg hover:bg-gray-50 transition-colors">
+                            ← Zurück
+                        </button>
+                        <button onclick="goToStep(3)" class="w-2/3 bg-brand-dark text-white rounded-xl py-3 font-bold md:text-lg hover:bg-black transition-colors relative group border border-brand-dark">
+                            Prompt generieren →
+                            <div class="absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px] group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-transform"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="view-3" class="hidden transition-opacity duration-300">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-brand-dark mb-4 leading-tight">Dein <span id="result-title-task">Unterrichtsmaterial</span> für <span id="result-title-klasse">Klasse 5</span> ist fertig.</h2>
+
+                    <div class="bg-brand-pink border border-brand-pinkDark rounded-xl p-4 mb-6 text-sm text-brand-dark shadow-sm">
+                        <h4 class="font-extrabold mb-2 text-base">So nutzt du deinen Prompt</h4>
+                        <ol class="list-decimal pl-4 space-y-1.5 text-gray-800">
+                            <li>Klicke auf <b>Prompt kopieren</b>.</li>
+                            <li>Öffne <b>ChatGPT, Claude oder Gemini</b>.</li>
+                            <li>Füge den Prompt dort ein und sende ihn ab.</li>
+                            <li><i>Tipp: Falls die KI keine druckfertige Datei ausgeben kann, bitte sie stattdessen um eine Textversion zum Selbstlayouten.</i></li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-brand-dark rounded-xl p-5 md:p-6 relative mb-6">
+                        <div class="absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px]"></div>
+                        
+                        <p class="text-brand-pinkDark font-bold text-[10px] md:text-xs tracking-wider mb-4 uppercase">System-Prompt: Lernwirksames Material erstellen</p>
+                        
+                        <div class="text-white text-xs md:text-sm leading-relaxed space-y-4 max-h-[35vh] overflow-y-auto font-mono opacity-90 pr-2" id="promptText">
+                            <p>Du agierst als Expert:in für formative Lernstandsdiagnostik, Fachdidaktik und Lehrplangestaltung.</p>
+                            
+                            <p>Erstelle passgenaues Material für die folgende Zielgruppe:<br>
+                            • Fach: Deutsch<br>
+                            • Klasse / Jahrgangsstufe: Klasse 5<br>
+                            • Schulform: Gymnasium<br>
+                            • Thema der Stunde: Märchenmerkmale<br>
+                            • Zentrales Lernziel: Sie sollen die typischen Merkmale von Märchen erkennen und benennen können</p>
+
+                            <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. GRUNDLAGE PRÜFEN</p>
+                            <p>Entwickle das Material ausschließlich auf Basis des angegebenen Lernziels. Prüfe insbesondere:</p>
+                            <ul class="list-disc pl-4 space-y-1">
+                                <li>Was genau sollen die Schüler:innen am Ende wissen?</li>
+                                <li>Welche kurze Schülerleistung kann diesen Lernstand sichtbar machen?</li>
+                                <li>Welche Antwort hilft der Lehrkraft, um zu wissen, wie der Unterricht weitergeführt werden muss?</li>
+                            </ul>
+                            
+                            <p class="font-bold text-brand-pinkDark mt-6 mb-2">2. FORMATIERUNG</p>
+                            <p>Erstelle das Layout so, dass es direkt kopiert und genutzt werden kann. Verwende klare Überschriften und eine altersgerechte Sprache.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <button onclick="copyPrompt()" id="copyBtn" class="w-full bg-brand-dark text-white rounded-xl py-4 font-bold text-lg hover:bg-black transition-colors relative group border border-brand-dark">
+                            Prompt kopieren
+                            <div class="absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px] group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-transform"></div>
+                        </button>
+                        
+                        <button onclick="goToStep(1)" class="w-full mt-2 text-brand-dark font-bold underline hover:text-brand-pinkDark transition-colors text-sm text-center">
+                            Neuen Prompt starten
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // State
+        let currentStep = 1;
+        let selectedTaskName = "Ganze Stunde planen";
+
+        // Make task buttons interactive (visual only for prototype)
+        document.querySelectorAll('.task-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const button = e.currentTarget;
+                
+                // If it's not already a selected style button
+                if (!button.classList.contains('bg-brand-pink')) {
+                    // Remove active styles from others
+                    document.querySelectorAll('.task-btn').forEach(b => {
+                        b.classList.remove('bg-brand-pink', 'border-brand-pinkDark', 'border-2', 'active-selection');
+                        b.classList.add('bg-white', 'border-gray-200', 'border');
+                    });
+                    
+                    // Add active style to clicked
+                    button.classList.remove('bg-white', 'border-gray-200', 'border');
+                    button.classList.add('bg-brand-pink', 'border-brand-pinkDark', 'border-2', 'active-selection');
+                    
+                    // Save the name for Step 3 using the span text
+                    selectedTaskName = button.querySelector('span').innerText.trim();
+                }
+            });
+        });
+
+        // Make pill buttons interactive
+        document.querySelectorAll('.pill-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.target.classList.toggle('bg-brand-pink');
+                e.target.classList.toggle('border-brand-pinkDark');
+                e.target.classList.toggle('text-brand-dark');
+                
+                e.target.classList.toggle('bg-white');
+                e.target.classList.toggle('border-gray-300');
+                e.target.classList.toggle('text-gray-600');
+            });
+        });
+
+        // Navigation Logic
+        function goToStep(step) {
+            // Hide all views with slight fade out
+            const views = [1, 2, 3];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.classList.add('hidden');
+                }, 150); // wait for fade
+            });
+
+            // Show target view after small delay
+            setTimeout(() => {
+                const targetView = document.getElementById(`view-${step}`);
+                targetView.classList.remove('hidden');
+                // Trigger reflow
+                void targetView.offsetWidth;
+                targetView.style.opacity = '1';
+                
+                updateStepper(step);
+                currentStep = step;
+
+                // Dynamically update Step 3 titles and generate Prompt
+                if(step === 3) {
+                    const fach = document.getElementById('input-fach').value;
+                    const inputKlasse = document.getElementById('input-klasse').value;
+                    const bundesland = document.getElementById('input-bundesland').value;
+                    const schulform = document.getElementById('input-schulform').value;
+                    const thema = document.getElementById('input-thema').value;
+                    const lernziel = document.getElementById('input-lernziel').value;
+
+                    // Titel aktualisieren
+                    document.getElementById('result-title-task').innerText = selectedTaskName;
+                    document.getElementById('result-title-klasse').innerText = inputKlasse || "deine Klasse";
+
+                    // Aktive "Pillen" (Tags) auslesen
+                    const activePills = Array.from(document.querySelectorAll('.pill-btn.bg-brand-pink')).map(btn => btn.innerText);
+                    let pillsHtml = '';
+                    if (activePills.length > 0) {
+                        pillsHtml = `<p><strong>Besondere Fokus-Bereiche / Rahmenbedingungen:</strong><br>• ${activePills.join('<br>• ')}</p><br>`;
+                    }
+
+                    // Dynamische Prompt-Logik basierend auf dem gewählten Werkzeug
+                    let systemRole = "Expert:in für Fachdidaktik und Unterrichtsentwicklung";
+                    let taskInstructions = "";
+                    let formatInstructions = "Erstelle das Layout so, dass es direkt kopiert und genutzt werden kann. Verwende klare Überschriften, altersgerechte Sprache und zeige, wo Lehrkräfte Anpassungen vornehmen müssen (z.B. in eckigen Klammern).";
+
+                    switch(selectedTaskName) {
+                        case "Ganze Stunde planen":
+                            systemRole = "Expert:in für Fachdidaktik, Methodik und Unterrichtsplanung";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: VERLAUFSPLAN</p>
+                                <p>Erstelle einen detaillierten Verlaufsplan für eine Einzelstunde, der stringent auf das Lernziel hinführt. Beinhalte:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Phasierung (Einstieg, Erarbeitung, Sicherung, Transfer)</li>
+                                    <li>Geplante Dauer der einzelnen Phasen in Minuten</li>
+                                    <li>Lehrer:innen-Aktivität (z.B. Gelenkstellen, Impulse)</li>
+                                    <li>Erwartete Schüler:innen-Aktivität</li>
+                                    <li>Sozialformen und geplante Medien</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Nutze für den Verlaufsplan zwingend eine übersichtliche Tabellenform (mit Markdown). Ergänze darunter einen kurzen methodisch-didaktischen Kommentar (max. 3 Sätze) zur Wahl der Leitmethode.";
+                            break;
+                        case "Ganze Reihe planen":
+                            systemRole = "Expert:in für Curriculumentwicklung und sequenzielle Unterrichtsplanung";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: SEQUENZPLANUNG</p>
+                                <p>Entwickle eine in sich schlüssige Unterrichtssequenz (ca. 4-6 Einzelstunden), die als Reihe auf das übergeordnete Lernziel hinführt. Benenne für jede Einzelstunde präzise:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Thema der jeweiligen Stunde</li>
+                                    <li>Das spezifische Teillernziel der Stunde</li>
+                                    <li>Idee für eine zentrale Methode oder das Vorgehen</li>
+                                </ul>
+                                <p>Achte auf einen motivierenden roten Faden und eine sinnvolle Progression (vom Leichten zum Schweren).</p>
+                            `;
+                            break;
+                        case "Unterrichtseinstieg":
+                            systemRole = "Expert:in für Fachdidaktik, Motivationspsychologie und Lernsettings";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: MOTIVIERENDE EINSTIEGE</p>
+                                <p>Entwickle drei alternative, kognitiv aktivierende Unterrichtseinstiege (je max. 5-10 Minuten), die Neugier wecken und direkt zum Lernziel überleiten.</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Variante 1: Problemorientiert (ein Widerspruch, ein Dilemma oder ein Fehler)</li>
+                                    <li>Variante 2: Visuell / Stummer Impuls (ein Bild, Objekt oder Zitat)</li>
+                                    <li>Variante 3: Lebensweltbezogen (direkter Bezug zum Alltag der Schüler:innen)</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Beschreibe die Varianten so konkret, dass die Lehrkraft sofort weiß, was sie sagen, zeigen oder an die Tafel schreiben muss. Nenne pro Variante den Zeitbedarf.";
+                            break;
+                        case "Arbeitsblatt":
+                            systemRole = "Erfahrene:r Lehrbuchautor:in und Fachdidaktiker:in";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: ARBEITSBLATT-INHALTE</p>
+                                <p>Entwirf die kompletten Text- und Aufgabeninhalte für ein zweiseitiges Arbeitsblatt. Gliedere logisch in:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Motivierende Überschrift und kurzer Informationstext (passend zur Lesekompetenz)</li>
+                                    <li>Aufgabenbereich 1 (Reproduktion, z.B. "Nenne...", "Beschreibe...")</li>
+                                    <li>Aufgabenbereich 2 (Reorganisation, z.B. "Vergleiche...", "Erkläre...")</li>
+                                    <li>Aufgabenbereich 3 (Transfer/Reflexion, z.B. "Beurteile...", "Entwickle...")</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Formatiere den Text so, dass er direkt in Word übernommen werden kann. Füge Linien ('___') als Platzhalter für Schülerantworten ein. Generiere am Ende einen separaten Lösungsschlüssel für die Lehrkraft.";
+                            break;
+                        case "Text vereinfachen":
+                            systemRole = "Expert:in für sprachsensiblen Fachunterricht, Sprachbildung und Differenzierung";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: SACHTEXT GENERIEREN</p>
+                                <p>Verfasse einen informativen Sachtext zum genannten Thema, der das Lernziel abdeckt. Passe den Text an das Lese- und Sprachniveau der Zielgruppe an. Achte auf:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Kurze, klare Sätze (Hauptsatzreihe statt komplexer Satzgefüge)</li>
+                                    <li>Klare Struktur mit aussagekräftigen Zwischenüberschriften</li>
+                                    <li>Erklärung zentraler Fachbegriffe im Text oder in einer Vokabelbox am Ende</li>
+                                    <li>Visuelle Ankerpunkte (Aufzählungszeichen)</li>
+                                </ul>
+                            `;
+                            break;
+                        case "Differenzierung":
+                            systemRole = "Expert:in für heterogene Lerngruppen, Binnendifferenzierung und Inklusion";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: DIFFERENZIERTE AUFGABEN</p>
+                                <p>Erstelle passend zum Lernziel Aufgabenstellungen auf drei verschiedenen Anforderungsniveaus, sodass alle Schüler:innen am gleichen Thema arbeiten können:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Niveau 1 (Grundlegend, mit starken Scaffolding-Hilfen)</li>
+                                    <li>Niveau 2 (Erweitert, Standardniveau der Klasse)</li>
+                                    <li>Niveau 3 (Komplex, für leistungsstarke "Fast Finisher", Fokus auf Transfer)</li>
+                                </ul>
+                            `;
+                            break;
+                        case "Wochenplan":
+                            systemRole = "Expert:in für selbstgesteuertes Lernen und Unterrichtsorganisation";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: WOCHENPLAN / FREIARBEIT</p>
+                                <p>Erstelle einen strukturierten Wochenplan (bzw. Freiarbeitsplan) für die Schüler:innen, der auf das Lernziel einzahlt. Der Plan muss enthalten:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Pflichtaufgaben (Must-dos) und Wahlaufgaben (Can-dos).</li>
+                                    <li>Realistische Zeiteinschätzungen pro Aufgabe.</li>
+                                    <li>Klare Angaben zur Sozialform (Einzel-, Partner-, Gruppenarbeit) und nötigen Materialien.</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Nutze ein übersichtliches Tabellenformat (Markdown), das Schüler:innen als Checkliste nutzen können (inklusive einer Spalte für 'Erledigt' und 'Kontrolliert').";
+                            break;
+                        case "Quiz":
+                            systemRole = "Expert:in für Gamification und summative / formative Kurzüberprüfungen";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: QUIZ ERSTELLEN</p>
+                                <p>Entwickle ein ansprechendes Quiz mit 10 Fragen, das exakt das angegebene Lernziel abprüft. Die Fragen sollen motivierend und kognitiv aktivierend sein. Nutze eine Mischung aus:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Multiple-Choice-Fragen (mit 4 Antwortmöglichkeiten, davon genau eine korrekt).</li>
+                                    <li>Wahr/Falsch-Fragen.</li>
+                                    <li>Kurzen offenen Fragen.</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Stelle die Fragen und Antworten übersichtlich dar. Generiere am Ende zwingend einen separaten Lösungsschlüssel für die Lehrkraft. Markiere bei Multiple-Choice die richtige Antwort (z.B. fett).";
+                            break;
+                        case "Lerngrafik":
+                            systemRole = "Expert:in für Informationsdesign und visuelle Lerndidaktik";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: VISUELLES KONZEPT</p>
+                                <p>Entwirf ein Konzept für eine Lerngrafik / ein Schaubild (z.B. Tafelbild, Poster, Handout oder Mindmap), die den Schüler:innen hilft, das Lernziel visuell zu erfassen. Beschreibe detailliert:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Was steht im Zentrum der Grafik?</li>
+                                    <li>Welche spezifischen Bildelemente / Icons / Symbole werden benötigt?</li>
+                                    <li>Welche kurzen Textbausteine oder Pfeile (für Beziehungen/Abläufe) sollen wo platziert werden?</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Strukturiere die Beschreibung so (als 'Regieanweisung'), dass die Lehrkraft das Bild direkt an der Tafel oder in einem Tool wie Canva / PowerPoint nachbauen kann. Nutze klare Hierarchien und Aufzählungszeichen.";
+                            break;
+                        case "Vokabeltest":
+                            systemRole = "Expert:in für Fachsprachenerwerb, Fremdsprachendidaktik und Wortschatzarbeit";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: VOKABEL- / FACHBEGRIFFSTEST</p>
+                                <p>Erstelle einen passgenauen Test zu Fachbegriffen oder Vokabeln des genannten Themas. Der Test soll verschiedene Überprüfungsformate enthalten, um das bloße Auswendiglernen zu vermeiden:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Teil 1: Direkte Übersetzung oder kurze Definition (Reproduktion).</li>
+                                    <li>Teil 2: Lückentext (Begriffe in den richtigen Kontext einsetzen).</li>
+                                    <li>Teil 3: Anwendung (z.B. "Bilde einen sinnvollen Beispielsatz mit...").</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Formatiere den Test druckfertig, setze Platzhalter (Linien '___') für die Schülerantworten. Hänge einen Lösungsbogen mit Bepunktungsvorschlag für die schnelle Korrektur an.";
+                            break;
+                        case "Exit-Ticket":
+                            systemRole = "Expert:in für formative Lernstandsdiagnostik";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. GRUNDLAGE PRÜFEN</p>
+                                <p>Entwickle ein Exit-Ticket (max. 3-5 Minuten Bearbeitungszeit), das den Lernstand zum Ende der Stunde sichtbar macht. Prüfe insbesondere:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Welche kurze Schülerleistung kann zeigen, ob das Zielwissen verstanden wurde?</li>
+                                    <li>Vermeide reine Ja/Nein-Fragen. Fordere eine Begründung oder ein Beispiel.</li>
+                                    <li>Welche Antworten helfen der Lehrkraft, um zu wissen, wie der Unterricht nächste Stunde weitergeführt werden muss?</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Erstelle ein Layout, das direkt kopiert werden kann (z.B. zwei Tickets nebeneinander für A4 Querformat). Füge Platzhalter für Namen und Datum ein.";
+                            break;
+                        case "Klassenarbeit":
+                            systemRole = "Expert:in für summatives Assessment, Testtheorie und Prüfungsdidaktik";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: KLASSENARBEIT KONZIPIEREN</p>
+                                <p>Konzipiere eine vollständige, faire Klassenarbeit/Klausur, die das Lernziel und Thema abdeckt. Die Arbeit muss enthalten:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Aufgaben aus dem Anforderungsbereich I (Reproduktion)</li>
+                                    <li>Aufgaben aus dem Anforderungsbereich II (Reorganisation / Transfer)</li>
+                                    <li>Aufgaben aus dem Anforderungsbereich III (Reflexion / Problemlösung)</li>
+                                </ul>
+                                <p>Achte auf eine präzise Formulierung mit klaren Operatoren (z.B. Nenne, Erkläre, Beurteile).</p>
+                            `;
+                            formatInstructions = "Vergib für jede Teilaufgabe sinnvolle Punkte (z.B. 2 VP, 4 VP). Hänge an das Ende einen vollständigen, stichpunktartigen Erwartungshorizont (Erwartungsbild) für die Lehrkraft an.";
+                            break;
+                        case "Bewertungsraster":
+                            systemRole = "Expert:in für transparente Leistungsbewertung und Kompetenzraster";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: BEWERTUNGSRUBLIK (RUBRIC)</p>
+                                <p>Erstelle ein detailliertes Bewertungsraster (Rubric) für eine Lernleistung passend zum Thema und Lernziel. Definiere:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>3 bis 5 konkrete Bewertungskriterien (z.B. Inhaltliche Tiefe, Fachsprache, Struktur)</li>
+                                    <li>Für jedes Kriterium 4 Niveaustufen (z.B. 'Übertrifft Erwartungen', 'Erfüllt Erwartungen', 'Teilweise', 'Nicht erfüllt')</li>
+                                    <li>Beschreibe in jeder Zelle präzise, was der/die Schüler:in konkret tun oder zeigen muss, um diese Stufe zu erreichen.</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Gib das Raster zwingend als Markdown-Tabelle aus.";
+                            break;
+                        case "Feedback geben":
+                            systemRole = "Expert:in für Lernpsychologie und wertschätzende, lernförderliche Rückmeldungen";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: FEEDBACK-TEXTBAUSTEINE</p>
+                                <p>Formuliere drei verschiedene Textbausteine für ein schriftliches Schüler-Feedback (z.B. unter einer Arbeit oder einem Projekt), die sich direkt auf das angegebene Lernziel beziehen. Die Bausteine sollen abgestuft sein:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Variante A: Für eine sehr gute, übertroffene Leistung.</li>
+                                    <li>Variante B: Für eine solide Leistung mit kleinen Lücken.</li>
+                                    <li>Variante C: Für eine schwache Leistung, bei der das Ziel nicht erreicht wurde.</li>
+                                </ul>
+                                <p>Nutze die 'Sandwich-Methode' (Positives - Konstruktiver Entwicklungsbereich - Ermutigung/Ausblick).</p>
+                            `;
+                            formatInstructions = "Formuliere die Texte in der direkten Anrede ('Du-Form'), altersgerecht und motivierend. Setze Platzhalter wie [Name] ein.";
+                            break;
+                        case "Elternbrief":
+                            systemRole = "Expert:in für professionelle Elternkommunikation und Schulpädagogik";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: ELTERNBRIEF</p>
+                                <p>Verfasse einen informativen, wertschätzenden Elternbrief. Ziel ist es, die Eltern über das kommende Thema/Projekt im Unterricht zu informieren und sie ggf. einzubinden. Beachte:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Professioneller, aber nahbarer und leicht verständlicher Tonfall (kein Bildungs-Jargon).</li>
+                                    <li>Erklärung, worum es bei dem Thema geht und warum es für die Kinder relevant ist.</li>
+                                    <li>Konkrete, niederschwellige Ideen, wie Eltern das Thema zuhause (ohne Druck) aufgreifen können.</li>
+                                </ul>
+                            `;
+                            formatInstructions = "Füge Platzhalter wie [Name der Lehrkraft], [Datum] und [Schulname] ein. Das Layout soll wie ein klassischer Brief aufgebaut sein.";
+                            break;
+                        default:
+                            // Fallback für Tools, falls die Benennung mal abweicht
+                            systemRole = "Erfahrene Lehrkraft und Expert:in für die Erstellung didaktischer Lehrmaterialien";
+                            taskInstructions = `
+                                <p class="font-bold text-brand-pinkDark mt-6 mb-2">1. AUFTRAG: MATERIAL ERSTELLEN</p>
+                                <p>Entwickle das Material passgenau auf Basis des angegebenen Lernziels. Prüfe insbesondere:</p>
+                                <ul class="list-disc pl-4 space-y-1">
+                                    <li>Was genau sollen die Schüler:innen am Ende wissen?</li>
+                                    <li>Ist der Umfang für die genannte Zielgruppe im vorgesehenen Zeitrahmen angemessen?</li>
+                                    <li>Sind die Arbeitsaufträge eindeutig (mit klaren Operatoren) formuliert?</li>
+                                </ul>
+                            `;
+                            break;
+                    }
+
+                    // Dynamischen Prompt zusammenbauen
+                    const promptContainer = document.getElementById('promptText');
+                    promptContainer.innerHTML = `
+                        <p>Du agierst als ${systemRole}.</p>
+                        <br>
+                        <p>Erstelle passgenaues Material (<strong>Format: ${selectedTaskName}</strong>) für die folgende Zielgruppe und Rahmenbedingungen:</p>
+                        <ul class="list-disc pl-4 space-y-1 mb-4 mt-2">
+                            <li>Fach: ${fach}</li>
+                            <li>Klasse / Jahrgangsstufe: ${inputKlasse}</li>
+                            <li>Schulform: ${schulform}</li>
+                            <li>Bundesland: ${bundesland}</li>
+                            <li>Thema der Stunde: ${thema}</li>
+                        </ul>
+
+                        <p><strong>Zentrales Lernziel:</strong><br>${lernziel}</p>
+                        <br>
+                        
+                        ${pillsHtml}
+                        
+                        ${taskInstructions}
+                        
+                        <p class="font-bold text-brand-pinkDark mt-6 mb-2">2. FORMATIERUNG</p>
+                        <p>${formatInstructions}</p>
+                    `;
+                }
+            }, 150);
+        }
+
+        function updateStepper(step) {
+            // Update Progress Bar
+            const pb = document.getElementById('progressBar');
+            if (step === 1) pb.style.width = '33.33%';
+            if (step === 2) pb.style.width = '66.66%';
+            if (step === 3) pb.style.width = '100%';
+
+            // Reset all indicators
+            for (let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`indicator-${i}`);
+                const label = document.getElementById(`label-${i}`);
+                
+                // Default unselected state
+                indicator.className = 'w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 transition-colors duration-300 bg-white';
+                label.className = 'text-gray-400 transition-colors duration-300 font-normal';
+
+                // Completed state (previous steps)
+                if (i < step) {
+                    // Show a checkmark for completed steps
+                    indicator.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    indicator.classList.remove('border-gray-300', 'text-gray-500');
+                    indicator.classList.add('border-brand-pinkDark', 'text-brand-pinkDark');
+                } else {
+                    indicator.innerHTML = i;
+                }
+
+                // Active state (current step)
+                if (i === step) {
+                    indicator.classList.remove('border-gray-300', 'text-gray-500', 'bg-white');
+                    indicator.classList.add('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
+                    
+                    label.classList.remove('text-gray-400', 'font-normal');
+                    label.classList.add('text-brand-dark', 'font-bold');
+                }
+            }
+        }
+
+        // Copy functionality
+        function copyPrompt() {
+            const textToCopy = document.getElementById('promptText').innerText;
+            const btn = document.getElementById('copyBtn');
+            const originalText = btn.innerHTML;
+
+            // Use the older execCommand for better cross-iframe compatibility as requested
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                // Success feedback
+                btn.innerHTML = `
+                    <span class="flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Kopiert!
+                    </span>
+                    <div class="absolute inset-0 rounded-xl bg-green-500 -z-10 translate-x-[4px] translate-y-[4px]"></div>
+                `;
+                btn.classList.add('bg-green-600', 'border-green-600');
+                btn.classList.remove('bg-brand-dark', 'border-brand-dark');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-green-600', 'border-green-600');
+                    btn.classList.add('bg-brand-dark', 'border-brand-dark');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Initialize state on load
+        updateStepper(1);
+    </script>
+</body>
+</html>
