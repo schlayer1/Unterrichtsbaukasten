@@ -113,7 +113,8 @@
 </head>
 <body class="text-brand-text min-h-screen flex flex-col font-sans selection:bg-brand-pink selection:text-brand-dark">
 
-    <header class="bg-white border-b border-brand-border px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-brand-border px-4 py-3 flex justify-between items-center sticky top-0 z-40">
         <div class="flex items-center gap-4">
             <div class="w-10 h-10 bg-brand-pink rounded-xl flex items-center justify-center border-2 border-brand-pinkDark shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
@@ -127,20 +128,114 @@
                 <p class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5">Gecodet mit ❤️ für die LAA/NQ RS des StS Gera</p>
             </div>
         </div>
+        
         <div class="flex items-center gap-2">
-            <!-- Gemini KI Status Indikator -->
-            <div class="flex items-center gap-1.5 px-2.5 py-1 bg-pink-50 border border-brand-pinkDark/40 text-brand-dark text-[11px] sm:text-xs font-semibold rounded-full shadow-sm">
-                <span class="w-2 h-2 rounded-full bg-brand-pinkDark animate-ping"></span>
-                <span class="w-2 h-2 rounded-full bg-brand-pinkDark -ml-3.5"></span>
-                <span class="text-brand-pinkDark font-bold">Gemini KI</span>
-                <span class="text-gray-500 font-normal hidden sm:inline">aktiv</span>
-            </div>
-            <button class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+            <!-- Menü-Button für KI Funktionen -->
+            <button onclick="openKiModal()" class="flex items-center gap-2 px-3 py-1.5 bg-brand-pink border border-brand-pinkDark rounded-xl text-xs sm:text-sm font-bold text-brand-dark hover:shadow-brutalist transition-all" title="KI Funktionen & API-Key verwalten">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+                </svg>
+                <span>KI Funktionen</span>
+                <span id="headerApiKeyDot" class="w-2 h-2 rounded-full bg-gray-400"></span>
             </button>
         </div>
     </header>
 
+    <!-- Modal: KI Funktionen & API-Key Verwaltung -->
+    <div id="kiModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white border-2 border-brand-dark rounded-3xl w-full max-w-lg p-6 shadow-brutalist-black relative animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto">
+            
+            <div class="flex items-center justify-between pb-3 border-b border-gray-200 mb-4 sticky top-0 bg-white z-10">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-brand-pink border border-brand-pinkDark flex items-center justify-center text-brand-pinkDark">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-brand-dark text-lg leading-tight">KI Funktionen</h3>
+                        <p class="text-xs text-gray-500">Google Gemini API-Verbindung verwalten</p>
+                    </div>
+                </div>
+                <button onclick="closeKiModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-brand-dark transition-colors">
+                    ✕
+                </button>
+            </div>
+
+            <div class="space-y-4 text-sm">
+                <!-- Datenschutz-Hinweis -->
+                <div class="bg-pink-50/70 border border-brand-pinkDark/40 rounded-xl p-3.5 text-xs text-gray-700 leading-relaxed">
+                    <p class="font-bold text-brand-dark mb-1">🔒 Datenschutz & Sicherheit</p>
+                    Dein API-Schlüssel wird <b>nicht</b> im Quellcode der HTML-Datei gespeichert. Er verbleibt ausschließlich lokal im Speicher deines Webbrowsers (LocalStorage). So kannst du die Datei bedenkenlos weitergeben.
+                </div>
+
+                <!-- Schritt-für-Schritt-Anleitung -->
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-xs text-gray-700">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleKeyGuide()">
+                        <div class="flex items-center gap-2 font-bold text-brand-dark">
+                            <span class="w-5 h-5 rounded-md bg-brand-pink border border-brand-pinkDark flex items-center justify-center text-[10px] text-brand-pinkDark font-extrabold">?</span>
+                            <span>Kostenlosen API-Schlüssel erstellen (1 Minute)</span>
+                        </div>
+                        <span id="guideChevron" class="text-gray-400 font-bold transition-transform text-[11px]">▼ Ausklappen</span>
+                    </div>
+                    
+                    <div id="keyGuideContent" class="hidden mt-3 pt-3 border-t border-gray-200 space-y-2.5">
+                        <ol class="list-decimal pl-4 space-y-1.5 text-gray-600 leading-relaxed">
+                            <li>
+                                Öffne die Website 
+                                <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="font-bold text-brand-dark underline hover:text-brand-pinkDark inline-flex items-center gap-1">
+                                    Google AI Studio
+                                    <svg class="w-3 h-3 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                </a> 
+                                und melde dich mit deinem normalen Google-Konto an.
+                            </li>
+                            <li>Klicke links oben auf die Schaltfläche <b>„Get API key“</b>.</li>
+                            <li>Wähle <b>„Create API key“</b> (in a new project).</li>
+                            <li>Kopiere den generierten Schlüssel und füge ihn unten in das Eingabefeld ein.</li>
+                        </ol>
+                        <div class="p-2 bg-white rounded-lg border border-gray-200 text-[11px] text-gray-500">
+                            💡 <b>Hinweis:</b> Der persönliche Zugriff über Google AI Studio ist im Free Tier komplett <b>kostenlos</b> und bietet mehr als genug Anfragen für die tägliche Unterrichtsvorbereitung.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Key Input -->
+                <div>
+                    <label class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">
+                        Gemini API-Schlüssel
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="modalApiKeyInput" placeholder="AIzaSy... oder AQ.Ab8..." class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2.5 pr-20 text-xs sm:text-sm font-mono focus:outline-none focus:border-brand-pinkDark transition-colors bg-white">
+                        <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-500 hover:text-brand-dark px-2 py-1 rounded bg-gray-100">
+                            <span id="apiKeyVisibilityText">Zeigen</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-1">Füge hier deinen Key ein, um die Prompt-Optimierung mit Gemini zu aktivieren.</p>
+                </div>
+
+                <!-- Statusanzeige -->
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span class="text-xs font-semibold text-gray-600">Aktueller Status:</span>
+                    <span id="modalKeyStatusBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-600">
+                        Kein Key hinterlegt
+                    </span>
+                </div>
+
+                <!-- Aktionen -->
+                <div class="flex flex-col sm:flex-row gap-2 pt-2">
+                    <button onclick="saveApiKeyFromModal()" class="flex-1 bg-brand-dark text-white rounded-xl py-2.5 text-xs sm:text-sm font-bold hover:bg-black transition-colors shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">
+                        Schlüssel speichern
+                    </button>
+                    <button onclick="copyCurrentApiKey()" id="copyKeyBtn" class="px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-50 text-gray-700 transition-colors">
+                        Kopieren
+                    </button>
+                    <button onclick="clearApiKeyFromModal()" class="px-3 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs sm:text-sm font-semibold hover:bg-red-100 transition-colors">
+                        Löschen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
     <main class="flex-grow flex items-center justify-center p-4 md:p-8">
         <div class="bg-white border border-brand-border rounded-3xl w-full max-w-[95%] md:max-w-3xl lg:max-w-5xl overflow-hidden shadow-lg relative flex flex-col max-h-[90vh] transition-all duration-300">
             
@@ -296,7 +391,7 @@
                                 <input type="text" id="input-thema" placeholder="z.B. Typische Merkmale eines Märchen erkennen" oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
                             </div>
 
-                            <!-- NEW: Dynamic Input Field based on selected task -->
+                            <!-- Dynamic Input Field based on selected task -->
                             <div id="dynamic-field-container" class="bg-brand-pink/30 p-3 rounded-xl border border-brand-pink">
                                 <label id="label-dynamic" class="block text-sm font-bold text-brand-dark mb-1">Zusätzliche Anforderungen (Optional)</label>
                                 <input type="text" id="input-dynamic" placeholder="Hier tippen..." oninput="saveData()" class="w-full border-2 border-brand-dark/30 rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors bg-white">
@@ -339,9 +434,9 @@
                 <div id="view-3" class="hidden transition-opacity duration-300 flex-grow flex flex-col">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 flex-shrink-0">
                         <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-brand-dark leading-tight">Dein Prompt für <span id="result-title-task" class="text-brand-pinkDark">Material</span> ist fertig.</h2>
-                        <div id="geminiLiveStatusBadge" class="inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-green-50 border border-green-300 text-green-700 text-xs font-semibold rounded-full">
-                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
-                            <span>⚡ KI-Prompt geschärft</span>
+                        <div id="geminiLiveStatusBadge" onclick="openKiModal()" class="cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-gray-50 border border-gray-300 text-gray-700 text-xs font-semibold rounded-full hover:bg-gray-100 transition-colors">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            <span>Status prüfen...</span>
                         </div>
                     </div>
 
@@ -415,6 +510,7 @@
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
             loadSavedData();
+            updateApiKeyUIStatus();
             
             document.querySelectorAll('.task-btn').forEach(btn => {
                 const btnText = btn.querySelector('span').innerText.trim();
@@ -434,6 +530,119 @@
             checkFormValidity();
         });
 
+        // ==========================================
+        // API KEY MANAGEMENT (LocalStorage Only)
+        // ==========================================
+        function getSavedApiKey() {
+            return localStorage.getItem('gemini_user_api_key') || "";
+        }
+
+        function setSavedApiKey(key) {
+            if (key) {
+                localStorage.setItem('gemini_user_api_key', key.trim());
+            } else {
+                localStorage.removeItem('gemini_user_api_key');
+            }
+            updateApiKeyUIStatus();
+        }
+
+        function updateApiKeyUIStatus() {
+            const key = getSavedApiKey();
+            const dot = document.getElementById('headerApiKeyDot');
+            const statusBadge = document.getElementById('modalKeyStatusBadge');
+            const input = document.getElementById('modalApiKeyInput');
+
+            if (input) input.value = key;
+
+            if (key && key.length > 5) {
+                if (dot) {
+                    dot.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+                    dot.title = "Gemini API-Key hinterlegt";
+                }
+                if (statusBadge) {
+                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700";
+                    statusBadge.innerText = "Aktiv verbunden";
+                }
+            } else {
+                if (dot) {
+                    dot.className = "w-2 h-2 rounded-full bg-gray-400";
+                    dot.title = "Kein Key hinterlegt";
+                }
+                if (statusBadge) {
+                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-600";
+                    statusBadge.innerText = "Kein Key hinterlegt";
+                }
+            }
+        }
+
+        function openKiModal() {
+            document.getElementById('kiModal').classList.remove('hidden');
+            updateApiKeyUIStatus();
+        }
+
+        function closeKiModal() {
+            document.getElementById('kiModal').classList.add('hidden');
+        }
+
+        function toggleKeyGuide() {
+            const content = document.getElementById('keyGuideContent');
+            const chevron = document.getElementById('guideChevron');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.innerText = '▲ Einklappen';
+            } else {
+                content.classList.add('hidden');
+                chevron.innerText = '▼ Ausklappen';
+            }
+        }
+
+        function saveApiKeyFromModal() {
+            const val = document.getElementById('modalApiKeyInput').value;
+            setSavedApiKey(val);
+            alert("API-Schlüssel wurde lokal in deinem Browser gespeichert!");
+            closeKiModal();
+        }
+
+        function clearApiKeyFromModal() {
+            if (confirm("Möchtest du den gespeicherten API-Key wirklich entfernen?")) {
+                setSavedApiKey("");
+                document.getElementById('modalApiKeyInput').value = "";
+                alert("API-Key entfernt.");
+            }
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('modalApiKeyInput');
+            const label = document.getElementById('apiKeyVisibilityText');
+            if (input.type === 'password') {
+                input.type = 'text';
+                label.innerText = 'Verbergen';
+            } else {
+                input.type = 'password';
+                label.innerText = 'Zeigen';
+            }
+        }
+
+        async function copyCurrentApiKey() {
+            const key = getSavedApiKey() || document.getElementById('modalApiKeyInput').value;
+            if (!key) {
+                alert("Kein Schlüssel zum Kopieren vorhanden.");
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(key);
+                const btn = document.getElementById('copyKeyBtn');
+                const orig = btn.innerText;
+                btn.innerText = "Kopiert!";
+                setTimeout(() => btn.innerText = orig, 2000);
+            } catch(e) {
+                alert("Kopieren fehlgeschlagen.");
+            }
+        }
+
+        // ==========================================
+        // DATA PERSISTENCE & VALIDATION
+        // ==========================================
         function saveData() {
             const formData = {
                 fach: document.getElementById('input-fach').value,
@@ -522,12 +731,10 @@
             }
         }
 
-        // Dynamische Feldanpassung für Schritt 2
         function updateDynamicFieldUI(taskName) {
             const label = document.getElementById('label-dynamic');
             const input = document.getElementById('input-dynamic');
             
-            // Zurücksetzen
             input.value = "";
             
             switch(taskName) {
@@ -609,7 +816,27 @@
             }, 150);
         }
 
-        // Baut die didaktischen Grundparameter zusammen
+        function updateStepper(step) {
+            const progressBar = document.getElementById('progressBar');
+            if(step === 1) progressBar.style.width = '33.33%';
+            if(step === 2) progressBar.style.width = '66.66%';
+            if(step === 3) progressBar.style.width = '100%';
+
+            for(let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`indicator-${i}`);
+                const label = document.getElementById(`label-${i}`);
+                if(i <= step) {
+                    indicator.classList.remove('border-gray-300', 'text-gray-500', 'bg-white');
+                    indicator.classList.add('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
+                    if(label) label.classList.replace('text-gray-400', 'text-brand-dark');
+                } else {
+                    indicator.classList.remove('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
+                    indicator.classList.add('border-gray-300', 'text-gray-500', 'bg-white');
+                    if(label) label.classList.replace('text-brand-dark', 'text-gray-400');
+                }
+            }
+        }
+
         function compilePromptParameters() {
             const fach = document.getElementById('input-fach').value;
             const inputKlasse = document.getElementById('input-klasse').value;
@@ -633,7 +860,6 @@
             };
         }
 
-        // Deterministische Standard-Vorlage (Fallback)
         function generateLocalFallbackPrompt(params) {
             let pillText = params.activePills.length > 0 ? `\n• Besondere Schwerpunkte: ${params.activePills.join(', ')}` : '';
             let extraText = params.dynamicInput.trim() ? `\n• Spezifische Zusatzvorgabe: ${params.dynamicInput}` : '';
@@ -662,7 +888,6 @@ FORMATIERUNG:
 Formatiere das Ergebnis übersichtlich in Markdown, damit es direkt in den Unterricht übernommen werden kann.`;
         }
 
-        // KI-Prompt-Generierung mit Gemini
         async function buildAndOptimizePrompt() {
             const params = compilePromptParameters();
             document.getElementById('result-title-task').innerText = params.tool;
@@ -671,18 +896,25 @@ Formatiere das Ergebnis übersichtlich in Markdown, damit es direkt in den Unter
             const loader = document.getElementById('geminiPromptLoader');
             const statusBadge = document.getElementById('geminiLiveStatusBadge');
 
-            // Sofort lokales Grundgerüst vorbereiten
             const fallbackPrompt = generateLocalFallbackPrompt(params);
+            const userApiKey = getSavedApiKey();
+
+            // Falls kein API-Key hinterlegt ist, direkt Fallback nutzen
+            if (!userApiKey) {
+                promptBox.innerText = fallbackPrompt;
+                statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold rounded-full hover:bg-amber-100 transition-colors";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Standard-Vorlage (Hier klicken für Gemini-Key)</span>`;
+                return;
+            }
 
             promptBox.classList.add('hidden');
             loader.classList.remove('hidden');
 
-            statusBadge.className = "inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-pink-50 border border-brand-pinkDark/40 text-brand-dark text-xs font-semibold rounded-full";
+            statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-pink-50 border border-brand-pinkDark/40 text-brand-dark text-xs font-semibold rounded-full";
             statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brand-pinkDark animate-spin"></span><span>Gemini formuliert Prompt...</span>`;
 
             try {
-                const apiKey = "AQ.Ab8RN6LXGaovV1y5DJ45ru-yn-_gm4Ka86AZZ2c95ZDt0NXUjg";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${encodeURIComponent(userApiKey)}`;
 
                 const systemInstruction = `Du bist ein professioneller Prompt-Engineer für Lehrkräfte. Deine Aufgabe ist es NICHT, das Unterrichtsmaterial selbst zu erstellen, sondern einen EXTREM PRÄZISEN, SOFORT KOPIERBAREN PROMPT zu schreiben, den die Lehrkraft in externe KIs (ChatGPT oder Gemini) einfügen kann.
 Regeln:
@@ -717,18 +949,18 @@ Besonderer Fokus: ${params.activePills.join(', ') || 'Standard'}`;
 
                 if (optimizedPrompt && optimizedPrompt.trim().length > 30) {
                     promptBox.innerText = optimizedPrompt.trim();
-                    statusBadge.className = "inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-green-50 border border-green-300 text-green-700 text-xs font-semibold rounded-full";
+                    statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-green-50 border border-green-300 text-green-700 text-xs font-semibold rounded-full hover:bg-green-100 transition-colors";
                     statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span>⚡ Durch Gemini KI optimiert</span>`;
                 } else {
                     promptBox.innerText = fallbackPrompt;
-                    statusBadge.className = "inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-gray-50 border border-gray-300 text-gray-600 text-xs font-semibold rounded-full";
+                    statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-gray-50 border border-gray-300 text-gray-600 text-xs font-semibold rounded-full hover:bg-gray-100 transition-colors";
                     statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-gray-400"></span><span>Standard-Vorlage</span>`;
                 }
             } catch (err) {
-                console.warn('Gemini API nicht erreichbar, nutze lokale Vorlage:', err);
+                console.warn('Gemini API Fehler:', err);
                 promptBox.innerText = fallbackPrompt;
-                statusBadge.className = "inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-gray-50 border border-gray-300 text-gray-600 text-xs font-semibold rounded-full";
-                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-gray-400"></span><span>Standard-Vorlage aktiv</span>`;
+                statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-red-50 border border-red-300 text-red-700 text-xs font-semibold rounded-full hover:bg-red-100 transition-colors";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Key prüfen / Standard-Vorlage</span>`;
             } finally {
                 loader.classList.add('hidden');
                 promptBox.classList.remove('hidden');
@@ -739,7 +971,7 @@ Besonderer Fokus: ${params.activePills.join(', ') || 'Standard'}`;
             await buildAndOptimizePrompt();
         }
 
-        async function fetchWithBackoff(url, options, maxRetries = 3) {
+        async function fetchWithBackoff(url, options, maxRetries = 2) {
             let delay = 1000;
             for (let i = 0; i <= maxRetries; i++) {
                 try {
@@ -756,118 +988,6 @@ Besonderer Fokus: ${params.activePills.join(', ') || 'Standard'}`;
                     await new Promise(res => setTimeout(res, delay));
                     delay *= 2;
                 }
-            }
-        }
-
-        async function runDirectGeminiGeneration() {
-            const rawPrompt = document.getElementById('promptText').innerText;
-            const btn = document.getElementById('geminiRunBtn');
-            const btnText = document.getElementById('geminiBtnText');
-            const loading = document.getElementById('geminiLoading');
-            const textResult = document.getElementById('geminiTextResult');
-            const imgResult = document.getElementById('geminiImageResult');
-
-            switchRightTab('output');
-            loading.classList.remove('hidden');
-            textResult.innerText = '';
-            imgResult.classList.add('hidden');
-            btn.disabled = true;
-            btnText.innerText = "Gemini generiert...";
-
-            try {
-                const apiKey = "AQ.Ab8RN6LXGaovV1y5DJ45ru-yn-_gm4Ka86AZZ2c95ZDt0NXUjg";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-
-                const payload = {
-                    contents: [{ parts: [{ text: rawPrompt }] }],
-                    systemInstruction: {
-                        parts: [{ text: "Du bist eine erstklassige pädagogische Fach-KI für Lehrkräfte. Formatiere deine Antworten sauber in didaktisch strukturiertem Markdown mit klaren Überschriften, Listen und Tabellen." }]
-                    }
-                };
-
-                const res = await fetchWithBackoff(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-                const output = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (output) {
-                    textResult.innerText = output;
-                    document.getElementById('outputBadge').classList.remove('hidden');
-                } else {
-                    textResult.innerText = "Hinweis: Es konnte kein Inhalt erzeugt werden. Bitte überprüfe deine Eingabe oder kopiere den Prompt manuell.";
-                }
-            } catch (err) {
-                textResult.innerText = "Fehler bei der Verbindung mit der Gemini API. Du kannst den Prompt stattdessen einfach über den Button 'Prompt kopieren' in ChatGPT oder Gemini einfügen.";
-            } finally {
-                loading.classList.add('hidden');
-                btn.disabled = false;
-                btnText.innerText = "⚡ Direkt mit Gemini generieren";
-            }
-        }
-
-        async function runGeminiImageGeneration() {
-            const thema = document.getElementById('input-thema').value;
-            const klasse = document.getElementById('input-klasse').value;
-            const fach = document.getElementById('input-fach').value;
-            const dynamicInput = document.getElementById('input-dynamic').value;
-            
-            const btn = document.getElementById('geminiImgBtn');
-            const loading = document.getElementById('geminiLoading');
-            const textResult = document.getElementById('geminiTextResult');
-            const imgResult = document.getElementById('geminiImageResult');
-            const imgElement = document.getElementById('generatedImg');
-            const downloadLink = document.getElementById('downloadImgLink');
-
-            switchRightTab('output');
-            loading.classList.remove('hidden');
-            textResult.innerText = '';
-            imgResult.classList.add('hidden');
-            btn.disabled = true;
-
-            const imagePrompt = `Ein klares, didaktisches Infografik-Poster für Schüler der ${klasse} im Fach ${fach} zum Thema '${thema}'. Stil: Übersichtlich, freundliche Farben, didaktisch reduziert, Vektorgrafik / Icon-Design auf weißem Hintergrund mit klar lesbaren deutschen Beschriftungen, Pfeilen und strukturierten Merkmalskästen. Besonderer Stil/Wunsch: ${dynamicInput || 'Schülergerechte Infografik'}.`;
-
-            try {
-                const apiKey = "AQ.Ab8RN6LXGaovV1y5DJ45ru-yn-_gm4Ka86AZZ2c95ZDt0NXUjg";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
-
-                const payload = {
-                    contents: [{
-                        role: 'user',
-                        parts: [{ text: imagePrompt }]
-                    }],
-                    generationConfig: {
-                        responseModalities: ['IMAGE'],
-                        imageConfig: { aspectRatio: "4:3" }
-                    }
-                };
-
-                const res = await fetchWithBackoff(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-                const base64Data = data?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-
-                if (base64Data) {
-                    const dataUrl = `data:image/png;base64,${base64Data}`;
-                    imgElement.src = dataUrl;
-                    downloadLink.href = dataUrl;
-                    imgResult.classList.remove('hidden');
-                    textResult.innerText = `✅ Lerngrafik erfolgreich für "${thema}" generiert!`;
-                } else {
-                    textResult.innerText = "Das Bild konnte nicht erzeugt werden. Bitte nutze den Bild-Prompt aus dem Reiter 'Prompt-Vorlage'.";
-                }
-            } catch (err) {
-                textResult.innerText = "Fehler bei der Bildgenerierung. Bitte kopiere den Prompt manuell in ein KI-Tool.";
-            } finally {
-                loading.classList.add('hidden');
-                btn.disabled = false;
             }
         }
 
