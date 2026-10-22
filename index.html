@@ -12,7 +12,7 @@
     <meta name="theme-color" content="#ffffff">
     
     <script>
-        // PWA Standalone Setup (Manifest & Icon Generierung on-the-fly)
+        // PWA Standalone Setup
         const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect x="32" y="32" width="448" height="448" rx="96" fill="#FDECEF" stroke="#E48897" stroke-width="24"/><g transform="translate(128, 128) scale(10.66)"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" fill="none" stroke="#E48897" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="3.29 7 12 12 20.71 7" fill="none" stroke="#E48897" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="22" x2="12" y2="12" fill="none" stroke="#E48897" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
         const encodedIcon = "data:image/svg+xml;base64," + btoa(svgIcon);
 
@@ -50,7 +50,7 @@
             window.addEventListener('load', () => {
                 const swCode = `self.addEventListener('install', (e) => self.skipWaiting()); self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim())); self.addEventListener('fetch', (e) => {});`;
                 const swBlob = new Blob([swCode], { type: 'text/javascript' });
-                navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(err => console.log('SW Registration skipped (local context)'));
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
             });
         }
     </script>
@@ -104,19 +104,26 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        [contenteditable]:empty:before {
-            content: attr(placeholder);
-            color: #9ca3af;
-            cursor: text;
+        select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23111111' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em;
+            padding-right: 2.5rem;
+            -webkit-print-color-adjust: exact;
+            appearance: none;
         }
     </style>
 </head>
 <body class="text-brand-text min-h-screen flex flex-col font-sans selection:bg-brand-pink selection:text-brand-dark">
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-[70] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
     <!-- Header -->
-    <header class="bg-white border-b border-brand-border px-4 py-3 flex justify-between items-center sticky top-0 z-40">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 bg-brand-pink rounded-xl flex items-center justify-center border-2 border-brand-pinkDark shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">
+    <header class="bg-white border-b border-brand-border px-3 sm:px-6 py-3 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-brand-pink rounded-xl flex items-center justify-center border-2 border-brand-pinkDark shadow-[2px_2px_0px_0px_rgba(228,136,151,1)] flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                     <polyline points="3.29 7 12 12 20.71 7"></polyline>
@@ -124,50 +131,66 @@
                 </svg>
             </div>
             <div class="flex flex-col justify-center">
-                <h1 class="font-bold text-lg leading-tight text-brand-dark">KI-<br>Unterrichtsbaukasten</h1>
+                <h1 class="font-bold text-base sm:text-lg leading-tight text-brand-dark">KI-Unterrichtsbaukasten</h1>
                 <p class="text-[10px] sm:text-xs text-gray-500 font-medium mt-0.5">Gecodet mit ❤️ für die LAA/NQ RS des StS Gera</p>
             </div>
         </div>
         
-        <div class="flex items-center gap-2">
-            <!-- Menü-Button für KI Funktionen -->
-            <button onclick="openKiModal()" class="flex items-center gap-2 px-3 py-1.5 bg-brand-pink border border-brand-pinkDark rounded-xl text-xs sm:text-sm font-bold text-brand-dark hover:shadow-brutalist transition-all" title="KI Funktionen & API-Key verwalten">
+        <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Readme / Handbuch Button -->
+            <button onclick="openReadmeModal()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-bold text-brand-dark hover:bg-gray-50 hover:border-brand-pinkDark transition-all" title="Handbuch & Funktionsübersicht">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span class="hidden md:inline">Handbuch</span>
+            </button>
+
+            <!-- Prompt-Historie Button -->
+            <button onclick="openHistoryModal()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-bold text-brand-dark hover:bg-gray-50 hover:border-brand-pinkDark transition-all relative" title="Letzte 10 Prompts">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                    <path d="M12 7v5l4 2"></path>
+                </svg>
+                <span class="hidden md:inline">Verlauf</span>
+                <span id="historyCountBadge" class="hidden px-1.5 py-0.2 bg-brand-pink border border-brand-pinkDark text-[10px] font-extrabold rounded-full text-brand-dark">0</span>
+            </button>
+
+            <!-- Menü-Button für KI Funktionen & Backup -->
+            <button onclick="openKiModal()" class="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-brand-pink border border-brand-pinkDark rounded-xl text-xs sm:text-sm font-bold text-brand-dark hover:shadow-brutalist transition-all" title="KI Funktionen, API-Key & Geräte-Backup verwalten">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark">
                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
                 </svg>
-                <span>KI Funktionen</span>
+                <span>KI & Backup</span>
                 <span id="headerApiKeyDot" class="w-2 h-2 rounded-full bg-gray-400"></span>
             </button>
         </div>
     </header>
 
-    <!-- Modal: KI Funktionen & API-Key Verwaltung -->
+    <!-- Modal 1: KI Funktionen, API-Key & Backup-Verwaltung -->
     <div id="kiModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div class="bg-white border-2 border-brand-dark rounded-3xl w-full max-w-lg p-6 shadow-brutalist-black relative animate-in fade-in zoom-in-95 duration-150 max-h-[92vh] overflow-y-auto">
-            
+        <div class="bg-white border-2 border-brand-dark rounded-3xl w-full max-w-lg p-6 shadow-brutalist-black relative max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-3 border-b border-gray-200 mb-4 sticky top-0 bg-white z-10">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-lg bg-brand-pink border border-brand-pinkDark flex items-center justify-center text-brand-pinkDark">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                     </div>
                     <div>
-                        <h3 class="font-extrabold text-brand-dark text-lg leading-tight">KI Funktionen</h3>
-                        <p class="text-xs text-gray-500">Google Gemini API-Verbindung verwalten</p>
+                        <h3 class="font-extrabold text-brand-dark text-lg leading-tight">KI & Geräte-Backup</h3>
+                        <p class="text-xs text-gray-500">API-Schlüssel & Daten verwalten</p>
                     </div>
                 </div>
-                <button onclick="closeKiModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-brand-dark transition-colors">
-                    ✕
-                </button>
+                <button onclick="closeKiModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-brand-dark transition-colors">✕</button>
             </div>
 
             <div class="space-y-4 text-sm">
-                <!-- Datenschutz-Hinweis -->
                 <div class="bg-pink-50/70 border border-brand-pinkDark/40 rounded-xl p-3.5 text-xs text-gray-700 leading-relaxed">
                     <p class="font-bold text-brand-dark mb-1">🔒 Datenschutz & Sicherheit</p>
-                    Dein API-Schlüssel wird <b>nicht</b> im Quellcode der HTML-Datei gespeichert. Er verbleibt ausschließlich lokal im Speicher deines Webbrowsers (LocalStorage). So kannst du die Datei bedenkenlos weitergeben.
+                    Dein API-Schlüssel und deine Profile werden ausschließlich lokal in deinem Browser gespeichert.
                 </div>
 
-                <!-- Schritt-für-Schritt-Anleitung -->
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-3.5 text-xs text-gray-700">
                     <div class="flex items-center justify-between cursor-pointer" onclick="toggleKeyGuide()">
                         <div class="flex items-center gap-2 font-bold text-brand-dark">
@@ -179,323 +202,563 @@
                     
                     <div id="keyGuideContent" class="hidden mt-3 pt-3 border-t border-gray-200 space-y-2.5">
                         <ol class="list-decimal pl-4 space-y-1.5 text-gray-600 leading-relaxed">
-                            <li>
-                                Öffne die Website 
-                                <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="font-bold text-brand-dark underline hover:text-brand-pinkDark inline-flex items-center gap-1">
-                                    Google AI Studio
-                                    <svg class="w-3 h-3 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                </a> 
-                                und melde dich mit deinem normalen Google-Konto an.
-                            </li>
-                            <li>Klicke links oben auf die Schaltfläche <b>„Get API key“</b>.</li>
-                            <li>Wähle <b>„Create API key“</b> (in a new project).</li>
-                            <li>Kopiere den generierten Schlüssel und füge ihn unten in das Eingabefeld ein.</li>
+                            <li>Öffne <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="font-bold text-brand-dark underline hover:text-brand-pinkDark inline-flex items-center gap-1">Google AI Studio ↗</a>.</li>
+                            <li>Klicke links oben auf <b>„Get API key“</b>.</li>
+                            <li>Wähle <b>„Create API key“</b> (in new project).</li>
+                            <li>Kopiere den Schlüssel und füge ihn unten ein.</li>
                         </ol>
-                        <div class="p-2 bg-white rounded-lg border border-gray-200 text-[11px] text-gray-500">
-                            💡 <b>Hinweis:</b> Der persönliche Zugriff über Google AI Studio ist im Free Tier komplett <b>kostenlos</b> und bietet mehr als genug Anfragen für die tägliche Unterrichtsvorbereitung.
-                        </div>
                     </div>
                 </div>
 
-                <!-- API Key Input -->
                 <div>
-                    <label class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">
-                        Gemini API-Schlüssel
-                    </label>
+                    <label class="block text-xs font-bold text-brand-dark uppercase tracking-wider mb-1.5">Gemini API-Schlüssel</label>
                     <div class="relative">
                         <input type="password" id="modalApiKeyInput" placeholder="AIzaSy... oder AQ.Ab8..." class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2.5 pr-20 text-xs sm:text-sm font-mono focus:outline-none focus:border-brand-pinkDark transition-colors bg-white">
                         <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-500 hover:text-brand-dark px-2 py-1 rounded bg-gray-100">
                             <span id="apiKeyVisibilityText">Zeigen</span>
                         </button>
                     </div>
-                    <p class="text-[11px] text-gray-400 mt-1">Füge hier deinen Key ein, um die Prompt-Optimierung mit Gemini zu aktivieren.</p>
                 </div>
 
-                <!-- Statusanzeige -->
                 <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
-                    <span class="text-xs font-semibold text-gray-600">Aktueller Status:</span>
-                    <span id="modalKeyStatusBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-600">
-                        Kein Key hinterlegt
-                    </span>
+                    <span class="text-xs font-semibold text-gray-600">Aktueller KI-Status:</span>
+                    <span id="modalKeyStatusBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-600">Kein Key hinterlegt</span>
                 </div>
 
-                <!-- Aktionen -->
-                <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                    <button onclick="saveApiKeyFromModal()" class="flex-1 bg-brand-dark text-white rounded-xl py-2.5 text-xs sm:text-sm font-bold hover:bg-black transition-colors shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">
-                        Schlüssel speichern
-                    </button>
-                    <button onclick="copyCurrentApiKey()" id="copyKeyBtn" class="px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-50 text-gray-700 transition-colors">
-                        Kopieren
-                    </button>
-                    <button onclick="clearApiKeyFromModal()" class="px-3 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs sm:text-sm font-semibold hover:bg-red-100 transition-colors">
-                        Löschen
-                    </button>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <button onclick="saveApiKeyFromModal()" class="flex-1 bg-brand-dark text-white rounded-xl py-2.5 text-xs sm:text-sm font-bold hover:bg-black transition-colors shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">Schlüssel speichern</button>
+                    <button onclick="copyCurrentApiKey()" class="px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-50 text-gray-700 transition-colors">Kopieren</button>
+                    <button onclick="clearApiKeyFromModal()" class="px-3 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs sm:text-sm font-semibold hover:bg-red-100 transition-colors">Key löschen</button>
+                </div>
+
+                <div class="pt-4 mt-4 border-t-2 border-dashed border-gray-200">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <h4 class="font-extrabold text-brand-dark text-sm">Gerätewechsel / Komplett-Backup</h4>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-3 leading-relaxed">
+                        Sichere deinen <b>API-Schlüssel</b>, deine <b>Klassen-Profile</b>, <b>Vorwissen-Einträge</b> und <b>Verläufe</b> in einer Datei für Laptop, Tablet und Smartphone.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button onclick="exportFullBackup()" class="flex items-center justify-center gap-2 px-3 py-2.5 bg-brand-pink border-2 border-brand-pinkDark rounded-xl text-xs font-bold text-brand-dark hover:shadow-brutalist transition-all">
+                            <span>Backup herunterladen</span>
+                        </button>
+                        <label class="cursor-pointer flex items-center justify-center gap-2 px-3 py-2.5 bg-white border-2 border-brand-dark rounded-xl text-xs font-bold text-brand-dark hover:bg-gray-50 transition-all">
+                            <span>Backup einspielen</span>
+                            <input type="file" id="backupFileInput" accept=".json" onchange="importFullBackup(event)" class="hidden">
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Main Container -->
-    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
-        <div class="bg-white border border-brand-border rounded-3xl w-full max-w-[95%] md:max-w-3xl lg:max-w-5xl overflow-hidden shadow-lg relative flex flex-col max-h-[90vh] transition-all duration-300">
-            
-            <div class="bg-white px-6 py-4 border-b border-brand-border flex gap-2 flex-shrink-0">
-                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
-                <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+    <!-- Modal 2: Prompt-Historie -->
+    <div id="historyModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white border-2 border-brand-dark rounded-3xl w-full max-w-2xl p-6 shadow-brutalist-black relative max-h-[90vh] flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-200 mb-4 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-brand-pink border border-brand-pinkDark flex items-center justify-center text-brand-pinkDark">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-brand-dark text-lg leading-tight">Prompt-Verlauf</h3>
+                        <p class="text-xs text-gray-500">Deine letzten generierten Prompts</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="clearPromptHistory()" class="text-xs font-semibold text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg transition-colors">Leeren</button>
+                    <button onclick="closeHistoryModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-brand-dark">✕</button>
+                </div>
+            </div>
+            <div id="historyListContainer" class="overflow-y-auto space-y-3 pr-1 flex-grow"></div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Handbuch / Readme -->
+    <div id="readmeModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white border-2 border-brand-dark rounded-3xl w-full max-w-3xl p-6 shadow-brutalist-black relative max-h-[92vh] flex flex-col">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-200 mb-4 flex-shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-brand-pink border-2 border-brand-pinkDark flex items-center justify-center text-brand-pinkDark font-extrabold">📖</div>
+                    <div>
+                        <h3 class="font-extrabold text-brand-dark text-lg sm:text-xl leading-tight">Handbuch & Funktionsübersicht</h3>
+                        <p class="text-xs text-gray-500">Didaktischer Leitfaden für deinen Unterricht</p>
+                    </div>
+                </div>
+                <button onclick="closeReadmeModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-brand-dark">✕</button>
             </div>
 
-            <div class="h-1 w-full bg-gray-100 relative flex-shrink-0">
+            <div class="overflow-y-auto space-y-4 pr-2 text-xs sm:text-sm text-gray-700 leading-relaxed">
+                <div class="bg-brand-pink/60 border border-brand-pinkDark rounded-2xl p-4">
+                    <h4 class="font-extrabold text-brand-dark text-sm sm:text-base mb-1">🎯 3-Schritte-Workflow & Prompt-Ketten</h4>
+                    <p>
+                        Der Baukasten unterstützt zwei bewährte Methoden: 
+                        <b>1. Direkte & strukturierte Prompts</b> für kompakte Einzelmaterialien (z. B. Arbeitsblätter, Exit-Tickets, Quizzes) und 
+                        <b>2. Iterative Prompt-Ketten (4 Schritte)</b> für vollständige Unterrichtsstunden. Hierbei analysiert die KI im ersten Schritt erst die Voraussetzungen und typische Hürden, bevor die Phasierung und die Materialien geplant werden.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="border border-gray-200 rounded-xl p-3 bg-gray-50">
+                        <p class="font-extrabold text-brand-dark mb-1">1. Aufgabe wählen</p>
+                        <p class="text-xs text-gray-600">15 praxiserprobte Werkzeuge für Unterrichtsvorbereitung, Diagnose und Kommunikation.</p>
+                    </div>
+                    <div class="border border-gray-200 rounded-xl p-3 bg-gray-50">
+                        <p class="font-extrabold text-brand-dark mb-1">2. Kontext & Vorwissen</p>
+                        <p class="text-xs text-gray-600">Eingabe von Fach, Schulform, Thema, Lernziel sowie dem konkreten Vorwissen der Lerngruppe.</p>
+                    </div>
+                    <div class="border border-gray-200 rounded-xl p-3 bg-gray-50">
+                        <p class="font-extrabold text-brand-dark mb-1">3. Nutzen & Verketten</p>
+                        <p class="text-xs text-gray-600">Kopieren in ChatGPT, Claude oder Gemini – und per Klick Folge-Materialien zum selben Thema erzeugen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-gray-200 flex justify-end flex-shrink-0">
+                <button onclick="closeReadmeModal()" class="px-5 py-2.5 bg-brand-dark text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-black transition-colors shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-3 sm:p-6 md:p-8">
+        <div class="bg-white border-2 border-brand-dark rounded-3xl w-full max-w-[98%] sm:max-w-[92%] md:max-w-3xl lg:max-w-5xl overflow-hidden shadow-brutalist-black relative flex flex-col max-h-[92vh] transition-all duration-300">
+            
+            <div class="bg-white px-6 py-3.5 border-b border-brand-border flex items-center justify-between flex-shrink-0">
+                <div class="flex gap-2">
+                    <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                    <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                </div>
+                <span class="text-[11px] font-mono text-gray-400 uppercase tracking-wider hidden sm:inline">Didaktischer Prompt-Baukasten</span>
+            </div>
+
+            <div class="h-1.5 w-full bg-gray-100 relative flex-shrink-0">
                 <div id="progressBar" class="h-full bg-brand-pinkDark transition-all duration-300 w-1/3"></div>
             </div>
 
-            <div class="p-5 sm:p-6 lg:p-10 overflow-y-auto flex-grow flex flex-col">
-                <nav class="flex items-center justify-between mb-8 text-sm font-semibold text-gray-500 relative flex-shrink-0 lg:w-2/3 lg:mx-auto">
+            <div class="p-4 sm:p-6 lg:p-9 overflow-y-auto flex-grow flex flex-col">
+                <!-- Stepper -->
+                <nav class="flex items-center justify-between mb-6 text-sm font-semibold text-gray-500 relative flex-shrink-0 lg:w-3/5 lg:mx-auto">
                     <div class="flex items-center gap-2 z-10 bg-white pr-2" id="nav-step-1">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-brand-pinkDark bg-brand-pinkDark text-white transition-colors duration-300" id="indicator-1">1</div>
-                        <span class="text-brand-dark transition-colors duration-300 hidden sm:inline" id="label-1">Aufgabe</span>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-brand-pinkDark bg-brand-pinkDark text-white font-bold text-xs" id="indicator-1">1</div>
+                        <span class="text-brand-dark font-bold text-xs sm:text-sm" id="label-1">Aufgabe</span>
                     </div>
-                    <div class="flex-grow border-t border-gray-300 mx-2"></div>
+                    <div class="flex-grow border-t-2 border-gray-200 mx-2"></div>
                     <div class="flex items-center gap-2 z-10 bg-white px-2" id="nav-step-2">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 transition-colors duration-300 bg-white" id="indicator-2">2</div>
-                        <span class="text-gray-400 transition-colors duration-300 hidden sm:inline" id="label-2">Details</span>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 font-bold text-xs bg-white" id="indicator-2">2</div>
+                        <span class="text-gray-400 font-semibold text-xs sm:text-sm" id="label-2">Details</span>
                     </div>
-                    <div class="flex-grow border-t border-gray-300 mx-2"></div>
+                    <div class="flex-grow border-t-2 border-gray-200 mx-2"></div>
                     <div class="flex items-center gap-2 z-10 bg-white pl-2" id="nav-step-3">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 transition-colors duration-300 bg-white" id="indicator-3">3</div>
-                        <span class="text-gray-400 transition-colors duration-300 hidden sm:inline" id="label-3">Prompt</span>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center border-2 border-gray-300 text-gray-500 font-bold text-xs bg-white" id="indicator-3">3</div>
+                        <span class="text-gray-400 font-semibold text-xs sm:text-sm" id="label-3">Dein Prompt</span>
                     </div>
                 </nav>
 
-                <!-- View 1 -->
+                <!-- VIEW 1: Aufgabe auswählen -->
                 <div id="view-1" class="transition-opacity duration-300 flex-grow flex flex-col">
                     <div class="flex-grow">
-                        <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-brand-dark mb-2">Was brauchst du gerade?</h2>
-                        <p class="text-gray-500 mb-6 text-sm lg:text-base">Wähle aus, für was du einen Prompt brauchst</p>
+                        <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-brand-dark mb-1 tracking-tight">Was brauchst du gerade?</h2>
+                        <p class="text-gray-500 mb-5 text-xs sm:text-sm">Wähle die Aufgabe, für die du einen Prompt brauchst.</p>
                         
-                        <div class="mb-8">
-                            <h3 class="text-xs lg:text-sm font-bold text-gray-400 tracking-wider uppercase mb-4 border-b border-gray-200 pb-2">Für den Unterricht</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-brand-pink border-2 border-brand-pinkDark rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:shadow-brutalist transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-pinkDark active-selection">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527-.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"></path></svg>
-                                    <span class="break-words w-full">Ganze Stunde planen</span>
+                        <!-- Gruppe 1: Für den Unterricht -->
+                        <div class="mb-6">
+                            <h3 class="text-xs font-extrabold text-gray-400 tracking-wider uppercase mb-3 border-b border-gray-200 pb-1.5 flex items-center gap-2">
+                                <span>Für den Unterricht</span>
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
+                                
+                                <button class="task-btn flex items-center gap-3 bg-brand-pink border-2 border-brand-pinkDark rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:shadow-brutalist transition-all duration-150 active-selection" data-task="Ganze Stunde planen">
+                                    <div class="w-8 h-8 rounded-lg bg-white border border-brand-pinkDark flex items-center justify-center text-brand-pinkDark flex-shrink-0 shadow-xs">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527-.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"></path></svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-brand-dark">Ganze Stunde planen</span>
+                                        <span class="text-[10px] text-gray-500 font-normal">4-Schritte-Kette</span>
+                                    </div>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
-                                    <span class="break-words w-full">Ganze Reihe planen</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Ganze Reihe planen">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-brand-dark">Ganze Reihe planen</span>
+                                        <span class="text-[10px] text-gray-500 font-normal">Sequenz-Kette</span>
+                                    </div>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
-                                    <span class="break-words w-full">Unterrichtseinstieg</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Unterrichtseinstieg">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Unterrichtseinstieg</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
-                                    <span class="break-words w-full">Arbeitsblatt</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Arbeitsblatt">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Arbeitsblatt</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-                                    <span class="break-words w-full">Text vereinfachen</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Text vereinfachen">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Text vereinfachen</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-                                    <span class="break-words w-full">Differenzierung</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Differenzierung">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Differenzierung</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                    <span class="break-words w-full">Wochenplan</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Wochenplan">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Wochenplan</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                    <span class="break-words w-full">Quiz</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Quiz">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Quiz</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    <span class="break-words w-full">Lerngrafik</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Lerngrafik">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Lerngrafik</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                                    <span class="break-words w-full">Vokabeltest</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Vokabeltest">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Vokabeltest</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
-                                    <span class="break-words w-full">Exit-Ticket</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Exit-Ticket">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Exit-Ticket</span>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="mb-8">
-                            <h3 class="text-xs lg:text-sm font-bold text-gray-400 tracking-wider uppercase mb-4 border-b border-gray-200 pb-2">Bewerten & Kommunizieren</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
-                                    <span class="break-words w-full">Klassenarbeit</span>
+                        <!-- Gruppe 2: Bewerten & Kommunizieren -->
+                        <div class="mb-6">
+                            <h3 class="text-xs font-extrabold text-gray-400 tracking-wider uppercase mb-3 border-b border-gray-200 pb-1.5 flex items-center gap-2">
+                                <span>Bewerten & Kommunizieren</span>
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Klassenarbeit">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Klassenarbeit</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                                    <span class="break-words w-full">Bewertungsraster</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Bewertungsraster">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Bewertungsraster</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                                    <span class="break-words w-full">Feedback geben</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Feedback geben">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Feedback geben</span>
                                 </button>
-                                <button class="task-btn flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-xl p-2 sm:p-2.5 text-left font-semibold text-[11px] sm:text-sm leading-tight hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-pinkDark">
-                                    <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-brand-pinkDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
-                                    <span class="break-words w-full">Elternbrief</span>
+
+                                <button class="task-btn flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-3 text-left font-semibold text-xs sm:text-sm leading-tight hover:bg-gray-50 transition-colors" data-task="Elternbrief">
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 flex-shrink-0">
+                                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                                    </div>
+                                    <span class="font-bold text-brand-dark">Elternbrief</span>
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-4 flex-shrink-0 lg:w-1/2 lg:mx-auto">
-                        <button onclick="goToStep(2)" class="w-full bg-brand-dark text-white rounded-xl py-4 font-bold text-lg hover:bg-black transition-colors shadow-[4px_4px_0px_0px_rgba(228,136,151,1)] relative group border border-brand-dark">
-                            Auswählen und weiter →
+                        <button onclick="goToStep(2)" class="w-full bg-brand-dark text-white rounded-xl py-3.5 font-bold text-base hover:bg-black transition-colors shadow-brutalist border-2 border-brand-dark">
+                            Weiter →
                         </button>
                     </div>
                 </div>
 
-                <!-- View 2 -->
+                <!-- VIEW 2: Details & Kontext -->
                 <div id="view-2" class="hidden transition-opacity duration-300 flex-grow flex flex-col">
-                    <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-brand-dark mb-6 flex-shrink-0">Worum geht es?</h2>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 mb-6 pr-2 flex-grow">
-                        <!-- Left Column: Context -->
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-bold text-brand-dark mb-1">Fach <span class="text-brand-pinkDark">*</span></label>
-                                <input type="text" id="input-fach" value="Deutsch" oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-bold text-brand-dark mb-1">Jahrgangsstufe <span class="text-brand-pinkDark">*</span></label>
-                                <input type="text" id="input-klasse" value="Klasse 5" oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
-                            </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-3 flex-shrink-0">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-extrabold text-brand-dark tracking-tight">Worum geht es in der Stunde?</h2>
+                            <p class="text-xs text-gray-500">Je konkreter, desto besser wird dein Prompt. • <span class="text-brand-pinkDark font-bold">* Pflichtfeld</span></p>
+                        </div>
+                        <span id="step2ActiveTaskBadge" class="inline-flex items-center gap-1 px-3 py-1 bg-brand-pink border border-brand-pinkDark rounded-full text-xs font-bold text-brand-dark self-start sm:self-auto">
+                            Werkzeug: Ganze Stunde planen
+                        </span>
+                    </div>
 
-                            <div>
-                                <label class="block text-sm font-bold text-brand-dark mb-1">Bundesland / Land</label>
-                                <input type="text" id="input-bundesland" value="Thüringen" oninput="saveData()" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
-                            </div>
+                    <!-- Klassen-Profile Schnellwahl -->
+                    <div class="mb-4 bg-gray-50 border border-gray-200 rounded-2xl p-3 flex-shrink-0">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                            <span class="text-[11px] font-extrabold text-brand-dark uppercase tracking-wider flex items-center gap-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                Eigene Klassen-Profile (1-Klick-Schnellwahl)
+                            </span>
+                            <button type="button" onclick="toggleProfileCreator()" class="text-xs font-bold text-brand-dark bg-white border border-brand-pinkDark px-2.5 py-0.5 rounded-lg hover:bg-brand-pink transition-colors">
+                                + Aktuelle Klasse merken
+                            </button>
+                        </div>
 
-                            <div>
-                                <label class="block text-sm font-bold text-brand-dark mb-1">Schulform</label>
-                                <input type="text" id="input-schulform" value="Regelschule" oninput="saveData()" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
+                        <div id="profileCreatorBar" class="hidden mb-2.5 pt-2 border-t border-gray-200 flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="newProfileNameInput" placeholder="z.B. 8b Geschichte (RS)..." class="flex-grow border border-brand-dark rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-brand-pinkDark bg-white">
+                            <div class="flex gap-1.5">
+                                <button type="button" onclick="saveCurrentClassProfile()" class="px-3 py-1.5 bg-brand-dark text-white rounded-lg text-xs font-bold hover:bg-black transition-colors">Speichern</button>
+                                <button type="button" onclick="toggleProfileCreator(false)" class="px-2.5 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300">Abbrechen</button>
                             </div>
                         </div>
 
-                        <!-- Right Column: Goals, Dynamic Field & Pills -->
-                        <div class="space-y-4">
+                        <div id="savedProfilesList" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8 mb-5 pr-1 flex-grow">
+                        <!-- Linke Spalte: Rahmenbedingungen -->
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-brand-dark mb-1">Fach <span class="text-brand-pinkDark">*</span></label>
+                                    <input type="text" id="input-fach" value="Deutsch" placeholder="z.B. Deutsch, Spanisch, Mathe, Bio ..." oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-xs font-bold text-brand-dark mb-1">Jahrgangsstufe <span class="text-brand-pinkDark">*</span></label>
+                                    <select id="input-klasse" onchange="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white font-medium">
+                                        <option value="Klasse 1">Klasse 1</option>
+                                        <option value="Klasse 2">Klasse 2</option>
+                                        <option value="Klasse 3">Klasse 3</option>
+                                        <option value="Klasse 4">Klasse 4</option>
+                                        <option value="Klasse 5" selected>Klasse 5</option>
+                                        <option value="Klasse 6">Klasse 6</option>
+                                        <option value="Klasse 7">Klasse 7</option>
+                                        <option value="Klasse 8">Klasse 8</option>
+                                        <option value="Klasse 9">Klasse 9</option>
+                                        <option value="Klasse 10">Klasse 10</option>
+                                        <option value="Klasse 11">Klasse 11</option>
+                                        <option value="Klasse 12">Klasse 12</option>
+                                        <option value="Klasse 13">Klasse 13</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-brand-dark mb-1">Bundesland <span class="text-brand-pinkDark">*</span></label>
+                                    <select id="input-bundesland" onchange="saveData()" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white font-medium">
+                                        <option value="Thüringen" selected>Thüringen</option>
+                                        <option value="Baden-Württemberg">Baden-Württemberg</option>
+                                        <option value="Bayern">Bayern</option>
+                                        <option value="Berlin">Berlin</option>
+                                        <option value="Brandenburg">Brandenburg</option>
+                                        <option value="Bremen">Bremen</option>
+                                        <option value="Hamburg">Hamburg</option>
+                                        <option value="Hessen">Hessen</option>
+                                        <option value="Mecklenburg-Vorpommern">Mecklenburg-Vorpommern</option>
+                                        <option value="Niedersachsen">Niedersachsen</option>
+                                        <option value="Nordrhein-Westfalen">Nordrhein-Westfalen</option>
+                                        <option value="Rheinland-Pfalz">Rheinland-Pfalz</option>
+                                        <option value="Saarland">Saarland</option>
+                                        <option value="Sachsen">Sachsen</option>
+                                        <option value="Sachsen-Anhalt">Sachsen-Anhalt</option>
+                                        <option value="Schleswig-Holstein">Schleswig-Holstein</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold text-brand-dark mb-1">Schulform</label>
+                                    <select id="input-schulform" onchange="saveData()" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white font-medium">
+                                        <option value="Regelschule" selected>Regelschule</option>
+                                        <option value="Gymnasium">Gymnasium</option>
+                                        <option value="Gesamtschule">Gesamtschule</option>
+                                        <option value="Gemeinschaftsschule">Gemeinschaftsschule</option>
+                                        <option value="Realschule">Realschule</option>
+                                        <option value="Hauptschule">Hauptschule</option>
+                                        <option value="Grundschule">Grundschule</option>
+                                        <option value="Förderschule">Förderschule</option>
+                                        <option value="Berufsschule">Berufsschule</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div>
-                                <label class="block text-sm font-bold text-brand-dark mb-1 flex justify-between items-end">
-                                    <span>Thema der Stunde <span class="text-brand-pinkDark">*</span></span>
+                                <label class="block text-xs font-bold text-brand-dark mb-1">Wie lang ist die Stunde? <span class="text-brand-pinkDark">*</span></label>
+                                <select id="input-dauer" onchange="setDurationFromSelect(this.value)" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white font-medium">
+                                    <option value="45 Min." selected>45 Minuten (Einzelstunde)</option>
+                                    <option value="90 Min.">90 Minuten (Doppelstunde)</option>
+                                    <option value="Flexibel">Flexibler Zeitrahmen</option>
+                                </select>
+                                <p class="text-[11px] text-gray-500 mt-1">90 Minuten entspricht einer Doppelstunde.</p>
+                            </div>
+
+                            <!-- Ausgangstext / Eigene Stichpunkte -->
+                            <div id="source-text-container" class="bg-gray-50 p-3 rounded-xl border border-gray-200 transition-colors">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label for="input-quelltext" class="block text-xs font-bold text-brand-dark">
+                                        Ausgangstext / Buchtext / eigene Stichpunkte (Optional)
+                                    </label>
+                                    <span id="sourceTextRecommendBadge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-pink border border-brand-pinkDark text-brand-dark">Empfohlen</span>
+                                </div>
+                                <textarea id="input-quelltext" rows="2" placeholder="Hier optional Sachtext, Buchauszug oder Schülertext einfügen..." oninput="saveData()" class="w-full border border-gray-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors bg-white resize-y"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Rechte Spalte: Thema, Lernziel, Vorwissen, Chips -->
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-brand-dark mb-1 flex justify-between items-end">
+                                    <span>Thema <span class="text-brand-pinkDark">*</span></span>
                                     <span id="thema-error" class="text-xs font-normal text-red-500 hidden">Bitte ausfüllen</span>
                                 </label>
-                                <input type="text" id="input-thema" placeholder="z.B. Typische Merkmale eines Märchen erkennen" oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors">
-                            </div>
-
-                            <!-- Dynamic Input Field based on selected task -->
-                            <div id="dynamic-field-container" class="bg-brand-pink/30 p-3 rounded-xl border border-brand-pink">
-                                <label id="label-dynamic" class="block text-sm font-bold text-brand-dark mb-1">Zusätzliche Anforderungen (Optional)</label>
-                                <input type="text" id="input-dynamic" placeholder="Hier tippen..." oninput="saveData()" class="w-full border-2 border-brand-dark/30 rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors bg-white">
+                                <input type="text" id="input-thema" placeholder="z.B. Adjektive steigern, Fotosynthese, Mauerfall ..." oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white">
                             </div>
 
                             <div>
-                                <label class="block text-sm font-bold text-brand-dark mb-1 flex justify-between items-end">
-                                    <span>Zentrales Lernziel: Was sollen die Schüler:innen am Ende wissen/können? <span class="text-brand-pinkDark">*</span></span>
+                                <label class="block text-xs font-bold text-brand-dark mb-1 flex justify-between items-end">
+                                    <span>Was sollen die Schüler:innen am Ende können? <span class="text-brand-pinkDark">*</span></span>
                                     <span id="lernziel-error" class="text-xs font-normal text-red-500 hidden">Zu kurz (min. 10 Zeichen)</span>
                                 </label>
-                                <textarea id="input-lernziel" rows="3" placeholder="z.B. Typische Merkmale eines Märchen erkennen und benennen" oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-4 py-2 text-gray-700 focus:outline-none focus:border-brand-pinkDark transition-colors resize-none"></textarea>
+                                <textarea id="input-lernziel" rows="2" placeholder="z.B. den Unterschied zwischen ... erklären können, eine eigene Position begründen können ..." oninput="saveData(); checkFormValidity();" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white resize-none"></textarea>
                             </div>
 
-                            <div class="pt-2">
-                                <label class="block text-sm font-bold text-brand-dark mb-3">Was ist dir beim Ergebnis besonders wichtig?</label>
-                                <div class="flex flex-wrap gap-2" id="pills-container">
-                                    <button type="button" class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Wenig Vorbereitungsaufwand</button>
-                                    <button type="button" class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Viel Schüleraktivität</button>
-                                    <button type="button" class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Besondere Bedürfnisse</button>
-                                    <button type="button" class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Digitale Ausstattung</button>
-                                    <button type="button" class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Spielerisch</button>
-                                    <button type="button" class="pill-btn px-4 py-1.5 rounded-full border border-gray-300 text-sm font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Anspruchsvoll</button>
+                            <!-- NEU aus Vorlage: Vorwissen / Was kennen sie bereits? -->
+                            <div>
+                                <label class="block text-xs font-bold text-brand-dark mb-1">
+                                    <span>Was kennen sie bereits?</span>
+                                </label>
+                                <textarea id="input-vorwissen" rows="2" placeholder="z.B. Grundbegriffe wurden schon eingeführt, das Thema ist komplett neu ..." oninput="saveData()" class="w-full border-2 border-brand-dark rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white resize-none"></textarea>
+                            </div>
+
+                            <!-- Dynamisches Zusatzfeld -->
+                            <div id="dynamic-field-container" class="bg-brand-pink/30 p-2.5 rounded-xl border border-brand-pink">
+                                <label id="label-dynamic" class="block text-xs font-bold text-brand-dark mb-1">Zusätzliche Wünsche (Optional)</label>
+                                <input type="text" id="input-dynamic" placeholder="Hier tippen..." oninput="saveData()" class="w-full border border-brand-dark/30 rounded-xl px-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:border-brand-pinkDark bg-white">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-brand-dark mb-1.5">Didaktische Schwerpunkte & Hilfen:</label>
+                                <div class="flex flex-wrap gap-1.5" id="pills-container">
+                                    <button type="button" class="pill-btn px-2.5 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Wenig Vorbereitungsaufwand</button>
+                                    <button type="button" class="pill-btn px-2.5 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Viel Schüleraktivität</button>
+                                    <button type="button" class="pill-btn px-2.5 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Operatoren (AFB I–III)</button>
+                                    <button type="button" class="pill-btn px-2.5 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Lösungserwartung / EWH</button>
+                                    <button type="button" class="pill-btn px-2.5 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">HS-/RS-Differenzierung</button>
+                                    <button type="button" class="pill-btn px-2.5 py-1 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-brand-pinkDark hover:text-brand-dark transition-colors bg-white">Alltagsbezug / Lebenswelt</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-100 mt-auto flex-shrink-0 lg:w-2/3 lg:mx-auto">
-                        <button onclick="goToStep(1)" class="w-full sm:w-1/3 bg-white text-brand-dark border-2 border-brand-dark rounded-xl py-3 font-bold md:text-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex flex-col sm:flex-row gap-3 pt-3 border-t border-gray-200 mt-auto flex-shrink-0 lg:w-3/5 lg:mx-auto">
+                        <button onclick="goToStep(1)" class="w-full sm:w-1/3 bg-white text-brand-dark border-2 border-brand-dark rounded-xl py-3 font-bold text-sm hover:bg-gray-50 transition-colors">
                             ← Zurück
                         </button>
-                        <button onclick="goToStep(3)" id="generate-btn" class="w-full sm:w-2/3 rounded-xl py-3 font-bold md:text-lg transition-all relative group border border-brand-dark flex items-center justify-center gap-2 bg-brand-dark text-white hover:bg-black opacity-50 cursor-not-allowed" disabled>
+                        <button onclick="goToStep(3)" id="generate-btn" class="w-full sm:w-2/3 rounded-xl py-3 font-bold text-sm transition-all relative border-2 border-brand-dark flex items-center justify-center gap-2 bg-brand-dark text-white hover:bg-black opacity-50 cursor-not-allowed" disabled>
                             <span id="generateBtnText">Prompt generieren →</span>
-                            <div class="btn-shadow absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px] transition-transform"></div>
+                            <div class="btn-shadow absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px]"></div>
                         </button>
                     </div>
                 </div>
 
-                <!-- View 3 -->
+                <!-- VIEW 3: Dein Prompt (Workflow / Direkte Prompts) -->
                 <div id="view-3" class="hidden transition-opacity duration-300 flex-grow flex flex-col">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 flex-shrink-0">
-                        <h2 class="text-2xl md:text-3xl lg:text-4xl font-extrabold text-brand-dark leading-tight">Dein Prompt für <span id="result-title-task" class="text-brand-pinkDark">Material</span> ist fertig.</h2>
-                        <div id="geminiLiveStatusBadge" onclick="openKiModal()" class="cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-gray-50 border border-gray-300 text-gray-700 text-xs font-semibold rounded-full hover:bg-gray-100 transition-colors">
-                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
-                            <span>Status prüfen...</span>
+                    
+                    <!-- Header Bereich (nach Screenshot 4) -->
+                    <div class="mb-4 flex-shrink-0">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-dark text-white rounded-full text-[11px] font-black uppercase tracking-wider">
+                                ✦ DEIN FERTIGER PROMPT
+                            </span>
+                            <div id="geminiLiveStatusBadge" onclick="openKiModal()" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-0.5 bg-gray-50 border border-gray-300 text-gray-700 text-xs font-semibold rounded-full hover:bg-gray-100 transition-colors">
+                                <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                                <span>Status prüfen...</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row sm:items-baseline gap-2">
+                            <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-brand-dark leading-tight" id="result-main-title">
+                                „Eine komplette Unterrichtsstunde für Klasse 5“ ist fertig.
+                            </h2>
+                            <span id="resultModePill" class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-brand-pink border border-brand-pinkDark rounded-full text-xs font-bold text-brand-dark self-start">
+                                ✓ Planen, prüfen, verbessern
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1" id="resultModeDescription">
+                            Diese Stunde entsteht in vier Schritten: einordnen, planen, prüfen und verbessern. Kopiere Schritt 1 zuerst in dein KI-Tool (Claude, ChatGPT oder Gemini), dann die weiteren Schritte im selben Chat.
+                        </p>
+                    </div>
+
+                    <!-- Workflow Erklärung Box (nur bei Ketten, Screenshot 4) -->
+                    <div id="workflowExplainerBox" class="bg-brand-pink/70 border border-brand-pinkDark rounded-2xl p-3.5 mb-4 text-xs sm:text-sm text-brand-dark flex-shrink-0">
+                        <h4 class="font-extrabold text-xs uppercase tracking-wider mb-1">So nutzt du diesen Workflow</h4>
+                        <p class="text-xs text-gray-800 leading-relaxed">
+                            Kopiere Schritt 1 und füge ihn in dein KI-Tool ein (Claude, ChatGPT oder Gemini). Prüfe kurz das Ergebnis, dann fügst du im selben Chat den nächsten Schritt ein, und so weiter bis zum letzten Schritt. Der letzte Schritt liefert dir das fertige Ergebnis.
+                        </p>
+                    </div>
+
+                    <!-- Prompt Container (Dynamisch: Entweder 4 Workflow-Karten ODER 1 Einzel-Prompt) -->
+                    <div id="promptCardsContainer" class="flex-grow space-y-4 overflow-y-auto pr-1 pb-4">
+                        <!-- Wird per JS befüllt -->
+                    </div>
+
+                    <!-- Footer Leiste in Schritt 3 -->
+                    <div class="pt-3 border-t border-gray-200 mt-auto flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button onclick="goToStep(2)" class="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold text-gray-700 hover:bg-gray-50">
+                                ← Details anpassen
+                            </button>
+                            <button onclick="startOver()" class="px-4 py-2 text-xs font-bold text-brand-dark underline hover:text-brand-pinkDark">
+                                Neues Werkzeug
+                            </button>
+                        </div>
+
+                        <!-- Copy & Go Shortcuts -->
+                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                            <button onclick="openExternalAi('https://chatgpt.com/', 'ChatGPT')" class="flex items-center gap-1.5 px-3 py-2 bg-white border border-brand-dark rounded-xl text-xs font-bold text-brand-dark hover:bg-gray-50">
+                                <span>ChatGPT öffnen ↗</span>
+                            </button>
+                            <button onclick="openExternalAi('https://gemini.google.com/app', 'Gemini')" class="flex items-center gap-1.5 px-3 py-2 bg-white border border-brand-dark rounded-xl text-xs font-bold text-brand-dark hover:bg-gray-50">
+                                <span>Gemini öffnen ↗</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 flex-grow">
-                        
-                        <!-- Left Column: Instructions -->
-                        <div class="lg:w-1/3 flex flex-col gap-4 flex-shrink-0 order-2 lg:order-1">
-                            <div class="bg-brand-pink border border-brand-pinkDark rounded-xl p-5 text-sm lg:text-base text-brand-dark shadow-sm">
-                                <h4 class="font-extrabold mb-3 text-base lg:text-lg">So nutzt du deinen Prompt</h4>
-                                <ol class="list-decimal pl-4 space-y-2 text-gray-800">
-                                    <li>Klicke unten auf <b>Prompt kopieren</b>.</li>
-                                    <li>Öffne <b>ChatGPT oder Gemini</b> in einem neuen Tab.</li>
-                                    <li>Füge den geschärften Prompt dort ein und sende ihn ab.</li>
-                                    <li><i class="text-xs lg:text-sm text-gray-600">Bei der Lerngrafik erzeugt ChatGPT oder Gemini die didaktische Grafik direkt im Chat.</i></li>
-                                </ol>
-                            </div>
-
-                            <div class="space-y-3 mt-2 lg:mt-auto">
-                                <button onclick="copyPrompt()" id="copyBtn" class="w-full bg-brand-dark text-white rounded-xl py-3.5 font-bold text-base hover:bg-black transition-colors relative group border border-brand-dark flex items-center justify-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                                    Prompt kopieren
-                                    <div class="absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px] group-hover:translate-x-[2px] group-hover:translate-y-[2px] transition-transform"></div>
-                                </button>
-
-                                <button onclick="refineCurrentPromptWithGemini()" id="reoptimizeBtn" class="w-full bg-white text-brand-dark border-2 border-brand-pinkDark rounded-xl py-2.5 font-bold text-xs sm:text-sm hover:bg-brand-pink transition-all flex items-center justify-center gap-2 shadow-[2px_2px_0px_0px_rgba(228,136,151,1)]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-pinkDark"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
-                                    <span>Mit Gemini neu formulieren</span>
-                                </button>
-                                
-                                <button onclick="startOver()" class="w-full text-brand-dark font-bold underline hover:text-brand-pinkDark transition-colors text-sm text-center pt-1">
-                                    Zurück zum Anfang
-                                </button>
-                            </div>
+                    <!-- Workflow Verkettung für Folge-Material -->
+                    <div class="mt-3 pt-3 border-t border-dashed border-gray-200 bg-gray-50 p-2.5 rounded-2xl flex-shrink-0">
+                        <div class="text-[11px] font-extrabold text-brand-dark uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                            <span>🔗 Passendes Folge-Material zum selben Thema generieren:</span>
                         </div>
-
-                        <!-- Right Column: The Prompt -->
-                        <div class="lg:w-2/3 bg-brand-dark rounded-xl p-5 md:p-6 relative flex-grow flex flex-col min-h-[50vh] order-1 lg:order-2">
-                            <div class="absolute inset-0 rounded-xl bg-brand-pinkDark -z-10 translate-x-[4px] translate-y-[4px]"></div>
-                            
-                            <div class="flex items-center justify-between border-b border-gray-700 pb-2 mb-3 flex-shrink-0">
-                                <div class="flex items-center gap-2 text-xs md:text-sm font-bold text-white">
-                                    <span class="w-2 h-2 rounded-full bg-brand-pinkDark animate-pulse"></span>
-                                    <span>Fertiger KI-Prompt</span>
-                                </div>
-                                <span class="text-[10px] text-gray-400 font-mono hidden sm:inline">Klickbar zum manuellen Anpassen</span>
-                            </div>
-
-                            <!-- Loading State while Gemini builds the prompt -->
-                            <div id="geminiPromptLoader" class="hidden flex-grow flex flex-col items-center justify-center text-center p-8 text-white space-y-3">
-                                <div class="w-9 h-9 border-3 border-brand-pinkDark border-t-transparent rounded-full animate-spin"></div>
-                                <p class="text-sm font-bold text-brand-pink">Gemini KI baut deinen Prompt didaktisch auf...</p>
-                                <p class="text-xs text-gray-400">Verfeinert Kriterien, Rollen und Ausgabestruktur.</p>
-                            </div>
-                            
-                            <div class="text-white text-xs md:text-sm lg:text-base leading-relaxed space-y-4 overflow-y-auto font-mono opacity-90 pr-2 flex-grow focus:outline-none focus:ring-1 focus:ring-brand-pinkDark rounded p-1" id="promptText" contenteditable="true">
-                                <!-- Dynamic Content injected here -->
-                            </div>
+                        <div class="flex flex-wrap gap-1.5" id="workflowChainButtons">
+                            <button type="button" onclick="chainToTask('Arbeitsblatt')" class="chain-btn px-2.5 py-1 rounded-xl bg-white border border-gray-300 text-xs font-bold text-brand-dark hover:bg-brand-pink hover:border-brand-pinkDark">➕ Arbeitsblatt</button>
+                            <button type="button" onclick="chainToTask('Exit-Ticket')" class="chain-btn px-2.5 py-1 rounded-xl bg-white border border-gray-300 text-xs font-bold text-brand-dark hover:bg-brand-pink hover:border-brand-pinkDark">➕ Exit-Ticket</button>
+                            <button type="button" onclick="chainToTask('Lerngrafik')" class="chain-btn px-2.5 py-1 rounded-xl bg-white border border-gray-300 text-xs font-bold text-brand-dark hover:bg-brand-pink hover:border-brand-pinkDark">➕ Lerngrafik</button>
+                            <button type="button" onclick="chainToTask('Differenzierung')" class="chain-btn px-2.5 py-1 rounded-xl bg-white border border-gray-300 text-xs font-bold text-brand-dark hover:bg-brand-pink hover:border-brand-pinkDark">➕ Differenzierung</button>
+                            <button type="button" onclick="chainToTask('Quiz')" class="chain-btn px-2.5 py-1 rounded-xl bg-white border border-gray-300 text-xs font-bold text-brand-dark hover:bg-brand-pink hover:border-brand-pinkDark">➕ Quiz</button>
+                            <button type="button" onclick="chainToTask('Bewertungsraster')" class="chain-btn px-2.5 py-1 rounded-xl bg-white border border-gray-300 text-xs font-bold text-brand-dark hover:bg-brand-pink hover:border-brand-pinkDark">➕ Bewertungsraster</button>
                         </div>
                     </div>
+
                 </div>
 
             </div>
@@ -503,196 +766,433 @@
     </main>
 
     <script>
-        // State
+        // State Management
         let currentStep = 1;
         let selectedTaskName = "Ganze Stunde planen";
+        let selectedDuration = "45 Min.";
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const bgClass = type === 'error' ? 'bg-red-600 border-red-800' : (type === 'info' ? 'bg-brand-dark border-brand-pinkDark' : 'bg-brand-dark border-green-500');
+            const badgeColor = type === 'error' ? 'bg-red-300' : (type === 'info' ? 'bg-brand-pinkDark' : 'bg-green-400');
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl text-white text-xs sm:text-sm font-bold border-2 shadow-lg transition-all duration-300 transform translate-y-2 opacity-0 ${bgClass}`;
+            toast.innerHTML = `
+                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 ${badgeColor}"></span>
+                <span class="flex-grow leading-snug">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
 
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
             loadSavedData();
             updateApiKeyUIStatus();
-            
+            renderSavedClassProfiles();
+            updateHistoryBadge();
+
+            // Task Buttons Bindings
             document.querySelectorAll('.task-btn').forEach(btn => {
-                const btnText = btn.querySelector('span').innerText.trim();
-                if(btnText === selectedTaskName) {
-                    setButtonActiveState(btn);
+                const task = btn.getAttribute('data-task');
+                if (task === selectedTaskName) {
+                    setButtonActiveState(btn, true);
+                } else {
+                    setButtonActiveState(btn, false);
                 }
-            });
-            
-            document.querySelectorAll('.pill-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    togglePillState(e.target);
+
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.task-btn').forEach(b => setButtonActiveState(b, false));
+                    setButtonActiveState(btn, true);
+                    selectedTaskName = task;
+                    updateDynamicFieldUI(selectedTaskName, true);
                     saveData();
                 });
             });
 
-            updateDynamicFieldUI(selectedTaskName);
+            // Pill Buttons Bindings
+            document.querySelectorAll('.pill-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    togglePillState(e.currentTarget);
+                    saveData();
+                });
+            });
+
+            updateDynamicFieldUI(selectedTaskName, false);
             checkFormValidity();
         });
 
-        // ==========================================
-        // API KEY MANAGEMENT (LocalStorage Only)
-        // ==========================================
-        function getSavedApiKey() {
-            return localStorage.getItem('gemini_user_api_key') || "";
-        }
-
-        function setSavedApiKey(key) {
-            if (key) {
-                localStorage.setItem('gemini_user_api_key', key.trim());
-            } else {
-                localStorage.removeItem('gemini_user_api_key');
-            }
-            updateApiKeyUIStatus();
-        }
-
-        function updateApiKeyUIStatus() {
-            const key = getSavedApiKey();
-            const dot = document.getElementById('headerApiKeyDot');
-            const statusBadge = document.getElementById('modalKeyStatusBadge');
-            const input = document.getElementById('modalApiKeyInput');
-
-            if (input) input.value = key;
-
-            if (key && key.length > 5) {
-                if (dot) {
-                    dot.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
-                    dot.title = "Gemini API-Key hinterlegt";
-                }
-                if (statusBadge) {
-                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700";
-                    statusBadge.innerText = "Aktiv verbunden";
-                }
-            } else {
-                if (dot) {
-                    dot.className = "w-2 h-2 rounded-full bg-gray-400";
-                    dot.title = "Kein Key hinterlegt";
-                }
-                if (statusBadge) {
-                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-600";
-                    statusBadge.innerText = "Kein Key hinterlegt";
-                }
-            }
-        }
-
-        function openKiModal() {
-            document.getElementById('kiModal').classList.remove('hidden');
-            updateApiKeyUIStatus();
-        }
-
-        function closeKiModal() {
-            document.getElementById('kiModal').classList.add('hidden');
-        }
-
-        function toggleKeyGuide() {
-            const content = document.getElementById('keyGuideContent');
-            const chevron = document.getElementById('guideChevron');
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                chevron.innerText = '▲ Einklappen';
-            } else {
-                content.classList.add('hidden');
-                chevron.innerText = '▼ Ausklappen';
-            }
-        }
-
-        function saveApiKeyFromModal() {
-            const val = document.getElementById('modalApiKeyInput').value;
-            setSavedApiKey(val);
-            alert("API-Schlüssel wurde lokal in deinem Browser gespeichert!");
-            closeKiModal();
-        }
-
-        function clearApiKeyFromModal() {
-            if (confirm("Möchtest du den gespeicherten API-Key wirklich entfernen?")) {
-                setSavedApiKey("");
-                document.getElementById('modalApiKeyInput').value = "";
-                alert("API-Key entfernt.");
-            }
-        }
-
-        function toggleApiKeyVisibility() {
-            const input = document.getElementById('modalApiKeyInput');
-            const label = document.getElementById('apiKeyVisibilityText');
-            if (input.type === 'password') {
-                input.type = 'text';
-                label.innerText = 'Verbergen';
-            } else {
-                input.type = 'password';
-                label.innerText = 'Zeigen';
-            }
-        }
-
-        async function copyCurrentApiKey() {
-            const key = getSavedApiKey() || document.getElementById('modalApiKeyInput').value;
-            if (!key) {
-                alert("Kein Schlüssel zum Kopieren vorhanden.");
-                return;
-            }
-            try {
-                await navigator.clipboard.writeText(key);
-                const btn = document.getElementById('copyKeyBtn');
-                const orig = btn.innerText;
-                btn.innerText = "Kopiert!";
-                setTimeout(() => btn.innerText = orig, 2000);
-            } catch(e) {
-                alert("Kopieren fehlgeschlagen.");
-            }
+        function setDurationFromSelect(val) {
+            selectedDuration = val;
+            saveData();
         }
 
         // ==========================================
-        // DATA PERSISTENCE & VALIDATION
+        // PROMPT ARTIFAKTE: KETTEN vs. EINZELPROMPTS
         // ==========================================
-        function saveData() {
-            const formData = {
-                fach: document.getElementById('input-fach').value,
-                klasse: document.getElementById('input-klasse').value,
-                bundesland: document.getElementById('input-bundesland').value,
-                schulform: document.getElementById('input-schulform').value,
-                thema: document.getElementById('input-thema').value,
-                lernziel: document.getElementById('input-lernziel').value,
-                dynamicField: document.getElementById('input-dynamic').value,
-                taskName: selectedTaskName,
-                activePills: Array.from(document.querySelectorAll('.pill-btn.bg-brand-pink')).map(b => b.innerText)
+        function isChainedTask(taskName) {
+            return taskName === "Ganze Stunde planen" || taskName === "Ganze Reihe planen";
+        }
+
+        function compilePromptParameters() {
+            return {
+                fach: document.getElementById('input-fach').value.trim() || 'Fach',
+                klasse: document.getElementById('input-klasse').value.trim() || 'Klasse 5',
+                bundesland: document.getElementById('input-bundesland').value.trim() || 'Thüringen',
+                schulform: document.getElementById('input-schulform').value.trim() || 'Regelschule',
+                duration: document.getElementById('input-dauer').value || '45 Min.',
+                thema: document.getElementById('input-thema').value.trim(),
+                lernziel: document.getElementById('input-lernziel').value.trim(),
+                vorwissen: document.getElementById('input-vorwissen').value.trim(),
+                dynamicInput: document.getElementById('input-dynamic').value.trim(),
+                quelltext: document.getElementById('input-quelltext').value.trim(),
+                activePills: Array.from(document.querySelectorAll('.pill-btn.bg-brand-pink')).map(btn => btn.innerText),
+                tool: selectedTaskName
             };
-            localStorage.setItem('kiBaukastenData', JSON.stringify(formData));
         }
 
-        function loadSavedData() {
-            const saved = localStorage.getItem('kiBaukastenData');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    if(data.fach) document.getElementById('input-fach').value = data.fach;
-                    if(data.klasse) document.getElementById('input-klasse').value = data.klasse;
-                    if(data.bundesland) document.getElementById('input-bundesland').value = data.bundesland;
-                    if(data.schulform) document.getElementById('input-schulform').value = data.schulform;
-                    if(data.thema) document.getElementById('input-thema').value = data.thema;
-                    if(data.lernziel) document.getElementById('input-lernziel').value = data.lernziel;
-                    if(data.dynamicField) document.getElementById('input-dynamic').value = data.dynamicField;
-                    if(data.taskName) selectedTaskName = data.taskName;
-                    
-                    if(data.activePills && data.activePills.length > 0) {
-                        document.querySelectorAll('.pill-btn').forEach(btn => {
-                            if(data.activePills.includes(btn.innerText)) {
-                                togglePillState(btn, true);
-                            }
-                        });
+        function generateChainedWorkflow(p) {
+            const didaktikChips = p.activePills.length > 0 ? `\n• Didaktische Schwerpunkte: ${p.activePills.join(', ')}` : '';
+            const quellBlock = p.quelltext ? `\n• Materialgrundlage/Quelltext: """${p.quelltext}"""` : '';
+            const vorwissenText = p.vorwissen ? p.vorwissen : 'Thema wird neu eingeführt / grundlegende Vorkenntnisse';
+
+            if (p.tool === "Ganze Reihe planen") {
+                return [
+                    {
+                        stepNumber: 1,
+                        name: "SCHRITT 1: BEDARF & SEQUENZIERUNG",
+                        prompt: `Agiere als erfahrene:r Curriculum- und Fachdidaktiker:in für das Fach ${p.fach} an einer ${p.schulform} in ${p.bundesland}.\n\nKontext:\n• Jahrgangsstufe: ${p.klasse}\n• Thema der Unterrichtsreihe: „${p.thema}“\n• Übergeordnetes Gesamtziel: ${p.lernziel}\n• Vorwissen der Lerngruppe: ${vorwissenText}${didaktikChips}\n\nAuftrag:\n1. Analysiere die didaktische Progression: In welche 4 bis 6 aufeinander aufbauenden Teilkompetenzen lässt sich die Reihe sinnvoll gliedern?\n2. Wo liegen erfahrungsgemäß die größten Verständnishürden und Fehlvorstellungen?`,
+                        reviewHint: "Passt die Aufteilung der Teilkompetenzen zu deinem Stoffverteilungsplan? Ergänze oder passe an, bevor du mit Schritt 2 fortfährst."
+                    },
+                    {
+                        stepNumber: 2,
+                        name: "SCHRITT 2: REIHENPLANUNG (TABELLE)",
+                        prompt: `Erstelle auf Basis der Vorab-Analyse die vollständige Reihenübersicht für die ${p.klasse} (${p.schulform}, ${p.bundesland}).\n\nStelle die Sequenz ZWINGEND als Markdown-Tabelle dar:\n| Std. | Thema der Einzelstunde | Didaktischer Schwerpunkt & Teil-Lernziel | Zentrale Methode / Handlung | Geplante Lernerfolgsüberprüfung |\n\nSorge für eine klare Dramaturgie vom Einstieg über die Erarbeitung bis zur Anwendungs-/Sicherungsphase.`,
+                        reviewHint: "Prüfe die Phasierung und Methodenvielfalt in der Tabelle. Nimm eventuelle Änderungen direkt vor."
+                    },
+                    {
+                        stepNumber: 3,
+                        name: "SCHRITT 3: DIFFERENZIERUNG & STOLPERSTEINE",
+                        prompt: `Prüfe die eben entworfene Unterrichtsreihe auf Machbarkeit und Inklusion:\n1. Wie differenzierst du gezielt für schwächere SuS (Förderung / Scaffolding) und leistungsstarke SuS (Forderaufgaben)?\n2. Welche diagnostischen Zwischenschritte setzt du ein, um zu prüfen, ob alle mitkommen?`,
+                        reviewHint: "Passen die Hilfestellungen zu den individuellen Bedürfnissen deiner Klasse?"
+                    },
+                    {
+                        stepNumber: 4,
+                        name: "SCHRITT 4: ABSCHLUSS & LEISTUNGSMESSUNG",
+                        prompt: `Finalisiere die Reihe:\n1. Entwirf eine authentische Abschlussaufgabe oder eine kleine Lernzielkontrolle zum Gesamtziel '${p.lernziel}'.\n2. Ergänze die Kriterien für eine gelungene Schülerleistung.`,
+                        reviewHint: "Fertig! Du kannst dir nun für einzelne Stunden der Reihe passende Arbeitsblätter oder Einstiege generieren."
                     }
-                } catch(e) {
-                    console.error("Fehler beim Laden", e);
+                ];
+            }
+
+            // Standard: Ganze Stunde planen
+            return [
+                {
+                    stepNumber: 1,
+                    name: "SCHRITT 1: EINORDNEN",
+                    prompt: `Analysiere als erfahrene:r Fachdidaktiker:in für ${p.fach} (${p.schulform} in ${p.bundesland}):\nWas sollten Schüler:innen der ${p.klasse} zum Thema „${p.thema}“ nach dieser Stunde (${p.duration}) können, und wo liegen typischerweise die größten Verständnisprobleme?\n\n• Angestrebtes Lernziel: ${p.lernziel}\n• Vorwissen / Lernausgangslage: ${vorwissenText}${didaktikChips}`,
+                    reviewHint: "Passt die Analyse zu deinem Unterricht? Ergänze oder korrigiere jetzt im Chat, bevor du mit Schritt 2 weitermachst."
+                },
+                {
+                    stepNumber: 2,
+                    name: "SCHRITT 2: PLANEN",
+                    prompt: `Baue auf der vorangegangenen Analyse auf und erstelle den kompletten Verlaufsplan für die ${p.duration} an der ${p.schulform}.\n\nFormatiere den Ablauf ZWINGEND als Markdown-Tabelle:\n| Zeit | Phase | Didaktische Funktion | Lehrer-Schüler-Interaktion / Impulse | Sozialform | Medien & Material |\n\nLernziel: ${p.lernziel}${quellBlock}`,
+                    reviewHint: "Prüfe den Zeitansatz und die Methoden. Passe bei Bedarf einzelne Phasen im Chat an."
+                },
+                {
+                    stepNumber: 3,
+                    name: "SCHRITT 3: PRÜFEN",
+                    prompt: `Prüfe die geplante Stunde auf seminarrelevante Gütekriterien:\n1. Binnendifferenzierung: Konkrete Differenzierungsmaßnahmen für das Hauptschul- und Realschulniveau (bzw. Basis/Erweitert).\n2. Typische Hürden & Zeitpuffer: Welche Phase ist zeitlich kritisch und wie kann flexibel gekürzt werden?\n3. Woran erkennt die Lehrkraft am Ende exakt, ob das Lernziel erreicht wurde?`,
+                    reviewHint: "Überprüfe, ob die Differenzierung zu deiner konkreten Lerngruppe passt."
+                },
+                {
+                    stepNumber: 4,
+                    name: "SCHRITT 4: VERBESSERN & MATERIAL",
+                    prompt: `Finalisiere den Entwurf mit konkretem Material:\n1. Erarbeite das vollständige Tafelbild bzw. den digitalen Hefteintrag (mit klarer Struktur und Merksatz).\n2. Formuliere die zentralen Arbeitsaufträge der Erarbeitungsphase in schülergerechter Sprache mit verbindlichen Operatoren.`,
+                    reviewHint: "Fertig! Kopiere die Materialien direkt in dein Dokument oder nutze unten die 1-Klick-Verkettung für passende Arbeitsblätter."
+                }
+            ];
+        }
+
+        function generateSinglePrompt(p) {
+            let pillText = p.activePills.length > 0 ? `\n• Didaktische Schwerpunkte: ${p.activePills.join(', ')}` : '';
+            let extraText = p.dynamicInput ? `\n• Spezifische Zusatzvorgabe: ${p.dynamicInput}` : '';
+            let vorwissenText = p.vorwissen ? `\n• Vorwissen der Lerngruppe: ${p.vorwissen}` : '';
+            let sourceBlock = p.quelltext ? `\n\nAUSGANGSTEXT / MATERIALGRUNDLAGE:\n"""\n${p.quelltext}\n"""` : '';
+
+            let role = `Agiere als erfahrene Fachlehrkraft und Fachdidaktiker:in für das Fach ${p.fach} an einer ${p.schulform} in ${p.bundesland}.`;
+            let instructions = `Erstelle passgenaues, sofort im Unterricht einsetzbares Material vom Typ "${p.tool}".`;
+            let format = `Formatiere das Ergebnis übersichtlich in Markdown mit klaren Zwischenüberschriften.`;
+
+            if (p.tool === "Arbeitsblatt") {
+                role = `Agiere als erfahrene:r Schulbuchautor:in und Fachdidaktiker:in für ${p.fach}.`;
+                instructions = `Erstelle ein druckfertiges Arbeitsblatt mit Kopfzeile, kurzem Einleitungsimpuls und 3–4 aufeinander aufbauenden Aufgaben nach den Anforderungsbereichen AFB I bis III.`;
+                format = `Gliedere in 1. Schüler-Arbeitsblatt (mit Punktangaben) und 2. Ausführlicher Erwartungshorizont / Musterlösung.`;
+            } else if (p.tool === "Lerngrafik") {
+                role = `Agiere als Expert:in für visuelle Didaktik, Infografiken und Tafelbildgestaltung für ${p.fach}.`;
+                instructions = `Generiere direkt eine didaktisch reduzierte, visuell ansprechende Lerngrafik/Infografik als Bildausgabe hier im Chat. Die Grafik muss übersichtliche Merkmalskästen, Pfeile und fehlerfreie, gut lesbare deutsche Fachbegriffe enthalten.`;
+                format = `1. Erzeuge zuerst das Bild direkt im Chat. 2. Gib darunter die strukturierte Tafelbild-Gliederung (Überschrift, Kernbegriffe, Merksatz) in Markdown aus.`;
+            } else if (p.tool === "Bewertungsraster") {
+                role = `Agiere als Spezialist:in für transparente Leistungsbewertung im Fach ${p.fach}.`;
+                instructions = `Erstelle ein kriterienorientiertes Bewertungsraster (Rubric) mit 4 Abstufungen und Punkteverteilung.`;
+                format = `Stelle das Raster ZWINGEND als Markdown-Tabelle mit den Spalten [Kriterium | Sehr gut | Gut | Teilweise | Noch Übungsbedarf | Punkte] dar.`;
+            } else if (p.tool === "Exit-Ticket") {
+                role = `Agiere als Fachdidaktiker:in für formatives Assessment im Fach ${p.fach}.`;
+                instructions = `Entwirf ein kurzes Exit-Ticket (3–5 Minuten) zur schnellen Lernstandserhebung am Stundenende.`;
+                format = `Erstelle 2 kurze Verständnisfragen sowie eine Daumen-/Ampel-Selbsteinschätzung im kopierfertigen Kurzformat.`;
+            } else if (p.tool === "Quiz") {
+                role = `Agiere als Fachdidaktiker:in für spielerische Lernstandserhebungen im Fach ${p.fach}.`;
+                instructions = `Erstelle ein motivierendes Quiz (6–8 Fragen) zur Überprüfung des Lernziels.`;
+                format = `Nummeriere die Fragen durch und füge am Ende einen kurzen Lösungsschlüssel mit Erklärungen an.`;
+            } else if (p.tool === "Text vereinfachen") {
+                role = `Agiere als Expert:in für sprachsensiblen Fachunterricht (DaZ / Einfache Sprache).`;
+                instructions = `Vereinfache das Thema bzw. den beigefügten Ausgangstext sprachlich für die Zielgruppe, ohne Kerninhalte zu verfälschen.`;
+                format = `Gliedere in: 1. Wortkasten (schwierige Begriffe erklärt), 2. Leicht verständlicher Lesetext mit kurzen Sätzen, 3. Drei Verständnisfragen.`;
+            } else if (p.tool === "Differenzierung") {
+                role = `Agiere als Expert:in für Binnendifferenzierung an einer ${p.schulform}.`;
+                instructions = `Erstelle dreifach differenziertes Aufgabenmaterial (Niveau Basis / Hauptschulprofil, Niveau Mittel / Realschulprofil, Niveau Erweitert).`;
+                format = `Trenne die Niveaustufen klar und ergänze Formulierungshilfen (Scaffolding) und Lösungen.`;
+            } else if (p.tool === "Klassenarbeit") {
+                role = `Agiere als erfahrene Fachlehrkraft für Prüfungsgestaltung in ${p.bundesland}.`;
+                instructions = `Konzipiere eine ausgewogene Klassenarbeit (${p.duration}) mit Aufgaben zu AFB I, II und III.`;
+                format = `Gliedere in Aufgabenblatt mit Punkten, ausführlichen Erwartungshorizont (als Markdown-Tabelle) und Notenschlüssel.`;
+            } else if (p.tool === "Feedback geben") {
+                role = `Agiere als lernförderliche Lehrkraft für ${p.fach}.`;
+                instructions = `Formuliere ein wertschätzendes, kriteriengeleitetes Feedback nach der Sandwich-Methode.`;
+                format = `Gliedere in Stärken, konkrete Verbesserungsempfehlungen und einen ermutigenden Ausblick.`;
+            } else if (p.tool === "Elternbrief") {
+                role = `Agiere als erfahrene Klassenlehrkraft mit verständlicher Elternkommunikation.`;
+                instructions = `Verfasse einen klaren, freundlichen Elternbrief ohne Bildungs-Jargon.`;
+                format = `Gliedere in Betreff, Anrede, Hauptteil (Termine & Fristen fett hervorgehoben) und Rücklaufzettel.`;
+            }
+
+            return `${role}
+
+Erstelle passgenaues Material vom Typ "${p.tool}" für folgende Lerngruppe:
+• Schulform & Bundesland: ${p.schulform}, ${p.bundesland}
+• Jahrgangsstufe & Fach: ${p.klasse}, ${p.fach}
+• Zeitrahmen: ${p.duration}
+• Thema: ${p.thema}
+• Was sollen die SuS am Ende können: ${p.lernziel}${vorwissenText}${pillText}${extraText}${sourceBlock}
+
+ARBEITSAUFTRAG:
+${instructions}
+
+FORMATIERUNG & AUSGABE:
+${format}`;
+        }
+
+        // ==========================================
+        // PROMPT RENDERING IN SCHRITT 3
+        // ==========================================
+        async function buildAndOptimizePrompt() {
+            const p = compilePromptParameters();
+            const container = document.getElementById('promptCardsContainer');
+            const mainTitle = document.getElementById('result-main-title');
+            const modePill = document.getElementById('resultModePill');
+            const modeDesc = document.getElementById('resultModeDescription');
+            const explainerBox = document.getElementById('workflowExplainerBox');
+            const statusBadge = document.getElementById('geminiLiveStatusBadge');
+
+            const isChained = isChainedTask(p.tool);
+
+            // Titel & Badges anpassen
+            if (isChained) {
+                mainTitle.innerText = `„${p.tool === 'Ganze Reihe planen' ? 'Eine komplette Unterrichtsreihe' : 'Eine komplette Unterrichtsstunde'} für ${p.klasse}“ ist fertig.`;
+                modePill.innerText = "✓ Planen, prüfen, verbessern";
+                modeDesc.innerText = "Diese Planung entsteht in vier Schritten: einordnen, planen, prüfen und verbessern. Kopiere Schritt 1 zuerst in dein KI-Tool (Claude, ChatGPT oder Gemini), dann die weiteren Schritte im selben Chat.";
+                explainerBox.classList.remove('hidden');
+            } else {
+                mainTitle.innerText = `„${p.tool} für ${p.klasse}“ ist fertig.`;
+                modePill.innerText = "✓ Sofort kopierbarer Direkt-Prompt";
+                modeDesc.innerText = "Kopiere diesen Prompt und füge ihn direkt in dein KI-Tool ein. Das Feld ist beschreibbar für eigene Anpassungen vor dem Kopieren.";
+                explainerBox.classList.add('hidden');
+            }
+
+            // Markiere aktiven Workflow-Verkettungs-Button
+            document.querySelectorAll('#workflowChainButtons .chain-btn').forEach(btn => {
+                if (btn.innerText.includes(p.tool)) {
+                    btn.classList.add('bg-brand-pink', 'border-brand-pinkDark');
+                } else {
+                    btn.classList.remove('bg-brand-pink', 'border-brand-pinkDark');
+                }
+            });
+
+            const apiKey = getSavedApiKey();
+            if (apiKey) {
+                statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 px-3 py-0.5 bg-green-50 border border-green-300 text-green-700 text-xs font-semibold rounded-full";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span>Verbunden</span>`;
+            } else {
+                statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 px-3 py-0.5 bg-gray-50 border border-gray-300 text-gray-600 text-xs font-semibold rounded-full";
+                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-gray-400"></span><span>Profi-Vorlage aktiv</span>`;
+            }
+
+            container.innerHTML = "";
+
+            if (isChained) {
+                const steps = generateChainedWorkflow(p);
+                steps.forEach(step => {
+                    const card = document.createElement('div');
+                    card.className = "border-2 border-brand-dark rounded-2xl overflow-hidden shadow-brutalist-black bg-white";
+                    card.innerHTML = `
+                        <div class="bg-brand-dark px-4 py-3 flex items-center justify-between border-b border-gray-800">
+                            <span class="text-xs sm:text-sm font-extrabold text-white tracking-wide flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-brand-pinkDark"></span>
+                                <span>${step.name}</span>
+                            </span>
+                            <button onclick="copySingleCardPrompt(this)" class="px-3 py-1 bg-brand-pink text-brand-dark border border-brand-pinkDark rounded-lg text-xs font-bold hover:bg-white transition-colors flex items-center gap-1 shadow-xs">
+                                <span>Prompt kopieren</span>
+                            </button>
+                        </div>
+                        <div class="p-4 bg-brand-dark/95 text-white font-mono text-xs sm:text-sm leading-relaxed whitespace-pre-wrap outline-none focus:ring-1 focus:ring-brand-pinkDark prompt-card-text" contenteditable="true">${escapeHtml(step.prompt)}</div>
+                        <div class="p-3 bg-pink-50 border-t border-brand-pinkDark/30 text-xs text-gray-700 leading-snug">
+                            <span class="font-extrabold text-brand-dark">Kurz prüfen:</span> ${step.reviewHint}
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                addPromptToHistory(p, steps[0].prompt, false);
+            } else {
+                const singlePrompt = generateSinglePrompt(p);
+                const card = document.createElement('div');
+                card.className = "border-2 border-brand-dark rounded-2xl overflow-hidden shadow-brutalist-black bg-white";
+                card.innerHTML = `
+                    <div class="bg-brand-dark px-4 py-3 flex items-center justify-between border-b border-gray-800">
+                        <span class="text-xs sm:text-sm font-extrabold text-white tracking-wide flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-brand-pinkDark"></span>
+                            <span>FERTIGER PROMPT FÜR ${p.tool.toUpperCase()}</span>
+                        </span>
+                        <button onclick="copySingleCardPrompt(this)" class="px-3.5 py-1.5 bg-brand-pink text-brand-dark border border-brand-pinkDark rounded-xl text-xs font-bold hover:bg-white transition-colors flex items-center gap-1.5 shadow-xs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                            <span>Prompt kopieren</span>
+                        </button>
+                    </div>
+                    <div class="p-4 sm:p-5 bg-brand-dark/95 text-white font-mono text-xs sm:text-sm leading-relaxed whitespace-pre-wrap outline-none focus:ring-1 focus:ring-brand-pinkDark prompt-card-text min-h-[30vh]" contenteditable="true">${escapeHtml(singlePrompt)}</div>
+                    <div class="p-3 bg-gray-50 border-t border-gray-200 text-xs text-gray-600 flex items-center justify-between">
+                        <span>💡 Tipp: Du kannst den Prompt oben vor dem Kopieren direkt bearbeiten.</span>
+                    </div>
+                `;
+                container.appendChild(card);
+                addPromptToHistory(p, singlePrompt, false);
+            }
+        }
+
+        async function copySingleCardPrompt(btn) {
+            const card = btn.closest('.border-brand-dark');
+            const textEl = card.querySelector('.prompt-card-text');
+            const text = textEl.innerText;
+            const ok = await copyTextToClipboard(text);
+            if (ok) {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<span>✓ Kopiert!</span>`;
+                btn.classList.add('bg-green-500', 'text-white', 'border-green-600');
+                showToast("Prompt in die Zwischenablage kopiert!");
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('bg-green-500', 'text-white', 'border-green-600');
+                }, 2200);
+            }
+        }
+
+        // ==========================================
+        // WORKFLOW VERKETTUNG & NAVIGATION
+        // ==========================================
+        async function chainToTask(newTask) {
+            selectedTaskName = newTask;
+            document.querySelectorAll('.task-btn').forEach(b => {
+                setButtonActiveState(b, b.getAttribute('data-task') === newTask);
+            });
+            updateDynamicFieldUI(newTask, false);
+            saveData();
+            showToast(`Folge-Material: ${newTask} wird vorbereitet...`, "info");
+            await buildAndOptimizePrompt();
+        }
+
+        function openExternalAi(url, name) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+            showToast(`Öffne ${name} – dort einfach mit Strg+V einfügen!`, "info");
+        }
+
+        function setButtonActiveState(button, isActive = true) {
+            const iconBox = button.querySelector('div');
+            if (isActive) {
+                button.classList.remove('bg-white', 'border-gray-200');
+                button.classList.add('bg-brand-pink', 'border-brand-pinkDark', 'border-2', 'active-selection');
+                if (iconBox) {
+                    iconBox.classList.remove('bg-gray-50', 'border-gray-200', 'text-gray-600');
+                    iconBox.classList.add('bg-white', 'border-brand-pinkDark', 'text-brand-pinkDark');
+                }
+            } else {
+                button.classList.remove('bg-brand-pink', 'border-brand-pinkDark', 'border-2', 'active-selection');
+                button.classList.add('bg-white', 'border-gray-200');
+                if (iconBox) {
+                    iconBox.classList.remove('bg-white', 'border-brand-pinkDark', 'text-brand-pinkDark');
+                    iconBox.classList.add('bg-gray-50', 'border-gray-200', 'text-gray-600');
                 }
             }
         }
 
-        function togglePillState(target, forceActive = null) {
-            const makeActive = forceActive !== null ? forceActive : !target.classList.contains('bg-brand-pink');
-            if (makeActive) {
-                target.classList.remove('bg-white', 'border-gray-300', 'text-gray-600');
-                target.classList.add('bg-brand-pink', 'border-brand-pinkDark', 'text-brand-dark');
-            } else {
-                target.classList.remove('bg-brand-pink', 'border-brand-pinkDark', 'text-brand-dark');
-                target.classList.add('bg-white', 'border-gray-300', 'text-gray-600');
+        async function goToStep(step) {
+            const views = [1, 2, 3];
+            views.forEach(v => {
+                const el = document.getElementById(`view-${v}`);
+                el.style.opacity = '0';
+                setTimeout(() => {
+                    el.classList.add('hidden');
+                }, 150);
+            });
+
+            setTimeout(async () => {
+                const targetView = document.getElementById(`view-${step}`);
+                targetView.classList.remove('hidden');
+                void targetView.offsetWidth;
+                targetView.style.opacity = '1';
+                
+                updateStepper(step);
+                currentStep = step;
+
+                if (step === 3) {
+                    await buildAndOptimizePrompt();
+                }
+            }, 150);
+        }
+
+        function updateStepper(step) {
+            const progressBar = document.getElementById('progressBar');
+            if(step === 1) progressBar.style.width = '33.33%';
+            if(step === 2) progressBar.style.width = '66.66%';
+            if(step === 3) progressBar.style.width = '100%';
+
+            for(let i = 1; i <= 3; i++) {
+                const indicator = document.getElementById(`indicator-${i}`);
+                const label = document.getElementById(`label-${i}`);
+                if(i <= step) {
+                    indicator.classList.remove('border-gray-300', 'text-gray-500', 'bg-white');
+                    indicator.classList.add('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
+                    if(label) {
+                        label.classList.remove('text-gray-400');
+                        label.classList.add('text-brand-dark', 'font-bold');
+                    }
+                } else {
+                    indicator.classList.remove('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
+                    indicator.classList.add('border-gray-300', 'text-gray-500', 'bg-white');
+                    if(label) {
+                        label.classList.remove('text-brand-dark', 'font-bold');
+                        label.classList.add('text-gray-400', 'font-semibold');
+                    }
+                }
             }
         }
 
@@ -705,7 +1205,6 @@
             const lernzielError = document.getElementById('lernziel-error');
 
             let isValid = true;
-
             if (!thema) {
                 isValid = false;
                 themaError.classList.remove('hidden');
@@ -731,317 +1230,508 @@
             }
         }
 
-        function updateDynamicFieldUI(taskName) {
+        function updateDynamicFieldUI(taskName, clearInput = true) {
             const label = document.getElementById('label-dynamic');
             const input = document.getElementById('input-dynamic');
+            const badge = document.getElementById('step2ActiveTaskBadge');
+            const sourceContainer = document.getElementById('source-text-container');
+            const sourceBadge = document.getElementById('sourceTextRecommendBadge');
             
-            input.value = "";
+            if (badge) badge.innerText = `Werkzeug: ${taskName}`;
+            if (clearInput) input.value = "";
+
+            const textHeavyTasks = ["Text vereinfachen", "Quiz", "Arbeitsblatt", "Differenzierung", "Vokabeltest", "Feedback geben"];
+            if (textHeavyTasks.includes(taskName)) {
+                sourceContainer.className = "bg-brand-pink/30 p-3 rounded-xl border border-brand-pinkDark transition-colors";
+                sourceBadge.classList.remove('hidden');
+            } else {
+                sourceContainer.className = "bg-gray-50 p-3 rounded-xl border border-gray-200 transition-colors";
+                sourceBadge.classList.add('hidden');
+            }
             
             switch(taskName) {
                 case "Lerngrafik":
                     label.innerText = "Stil der Grafik / Bildwelt (Optional)";
-                    input.placeholder = "z.B. Comic-Stil, fotorealistisch, einfache Skizze...";
+                    input.placeholder = "z.B. Schulbuch-Grafik, Vektor-Stil, Mindmap, Sketchnote...";
                     break;
                 case "Bewertungsraster":
-                    label.innerText = "Spezifische Bewertungskriterien (Optional)";
-                    input.placeholder = "z.B. Inhalt, Sprachrichtigkeit, Layout...";
+                    label.innerText = "Spezifische Kriterien (Optional)";
+                    input.placeholder = "z.B. Inhalt, Sprachrichtigkeit, Layout, Argumentation...";
                     break;
                 case "Klassenarbeit":
-                    label.innerText = "Thematische Schwerpunkte der Arbeit (Optional)";
-                    input.placeholder = "z.B. Fokus auf Grammatik und Textproduktion...";
+                    label.innerText = "Schwerpunkte & Bearbeitungszeit (Optional)";
+                    input.placeholder = "z.B. 45 Min., Fokus auf Textverständnis und Grammatik...";
                     break;
                 case "Text vereinfachen":
-                    label.innerText = "Ziel-Sprachniveau (Optional)";
-                    input.placeholder = "z.B. A2, B1 oder für Schüler mit LRS...";
+                    label.innerText = "Ziel-Sprachniveau / Förderbedarf (Optional)";
+                    input.placeholder = "z.B. DaZ A2, Leichte Sprache, LRS-freundlich...";
                     break;
                 case "Differenzierung":
                     label.innerText = "Art der Differenzierung (Optional)";
-                    input.placeholder = "z.B. nach Lesekompetenz, nach Lerntempo...";
+                    input.placeholder = "z.B. 3 Niveaustufen (Basis, Mittel, Profi) oder HS/RS...";
+                    break;
+                case "Vokabeltest":
+                    label.innerText = "Abfrageformat & Wortanzahl (Optional)";
+                    input.placeholder = "z.B. 12 Wörter, Lückensätze + Übersetzung...";
+                    break;
+                case "Elternbrief":
+                    label.innerText = "Anlass & Termine (Optional)";
+                    input.placeholder = "z.B. Wandertag am 15.05., Kosten 8 €, Rücklauf bis...";
                     break;
                 default:
                     label.innerText = "Zusätzliche Wünsche oder Rahmenbedingungen (Optional)";
-                    input.placeholder = "Gibt es noch etwas zu beachten?";
+                    input.placeholder = "z.B. Gruppenarbeit, Methodenwunsch oder Medien...";
             }
         }
 
-        document.querySelectorAll('.task-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const button = e.currentTarget;
-                if (!button.classList.contains('bg-brand-pink')) {
-                    document.querySelectorAll('.task-btn').forEach(b => setButtonActiveState(b, false));
-                    setButtonActiveState(button, true);
-                    selectedTaskName = button.querySelector('span').innerText.trim();
-                    updateDynamicFieldUI(selectedTaskName);
-                    saveData();
-                }
-            });
-        });
-
-        function setButtonActiveState(button, isActive = true) {
-            if (isActive) {
-                button.classList.remove('bg-white', 'border-gray-200');
-                button.classList.add('bg-brand-pink', 'border-brand-pinkDark', 'border-2', 'active-selection');
-                button.classList.replace('p-2', 'p-[7px]');
-                button.classList.replace('sm:p-2.5', 'sm:p-[9px]');
+        function togglePillState(target, forceActive = null) {
+            const makeActive = forceActive !== null ? forceActive : !target.classList.contains('bg-brand-pink');
+            if (makeActive) {
+                target.classList.remove('bg-white', 'border-gray-300', 'text-gray-600');
+                target.classList.add('bg-brand-pink', 'border-brand-pinkDark', 'text-brand-dark', 'font-bold');
             } else {
-                button.classList.remove('bg-brand-pink', 'border-brand-pinkDark', 'border-2', 'active-selection');
-                button.classList.add('bg-white', 'border-gray-200');
-                button.classList.replace('p-[7px]', 'p-2');
-                button.classList.replace('sm:p-[9px]', 'sm:p-2.5');
+                target.classList.remove('bg-brand-pink', 'border-brand-pinkDark', 'text-brand-dark', 'font-bold');
+                target.classList.add('bg-white', 'border-gray-300', 'text-gray-600');
             }
         }
 
-        async function goToStep(step) {
-            const views = [1, 2, 3];
-            views.forEach(v => {
-                const el = document.getElementById(`view-${v}`);
-                el.style.opacity = '0';
-                setTimeout(() => {
-                    el.classList.add('hidden');
-                }, 150);
+        // ==========================================
+        // STORAGE & DATA HANDLING
+        // ==========================================
+        function saveData() {
+            const formData = {
+                fach: document.getElementById('input-fach').value,
+                klasse: document.getElementById('input-klasse').value,
+                bundesland: document.getElementById('input-bundesland').value,
+                schulform: document.getElementById('input-schulform').value,
+                dauer: document.getElementById('input-dauer').value,
+                thema: document.getElementById('input-thema').value,
+                lernziel: document.getElementById('input-lernziel').value,
+                vorwissen: document.getElementById('input-vorwissen').value,
+                dynamicField: document.getElementById('input-dynamic').value,
+                quelltext: document.getElementById('input-quelltext').value,
+                taskName: selectedTaskName,
+                activePills: Array.from(document.querySelectorAll('.pill-btn.bg-brand-pink')).map(b => b.innerText)
+            };
+            localStorage.setItem('kiBaukastenData_v3', JSON.stringify(formData));
+        }
+
+        function loadSavedData() {
+            const saved = localStorage.getItem('kiBaukastenData_v3');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if(data.fach) document.getElementById('input-fach').value = data.fach;
+                    if(data.klasse) document.getElementById('input-klasse').value = data.klasse;
+                    if(data.bundesland) document.getElementById('input-bundesland').value = data.bundesland;
+                    if(data.schulform) document.getElementById('input-schulform').value = data.schulform;
+                    if(data.dauer) document.getElementById('input-dauer').value = data.dauer;
+                    if(data.thema) document.getElementById('input-thema').value = data.thema;
+                    if(data.lernziel) document.getElementById('input-lernziel').value = data.lernziel;
+                    if(data.vorwissen) document.getElementById('input-vorwissen').value = data.vorwissen;
+                    if(data.dynamicField) document.getElementById('input-dynamic').value = data.dynamicField;
+                    if(data.quelltext) document.getElementById('input-quelltext').value = data.quelltext;
+                    if(data.taskName) selectedTaskName = data.taskName;
+                    
+                    document.querySelectorAll('.pill-btn').forEach(btn => {
+                        const isSavedActive = Array.isArray(data.activePills) && data.activePills.includes(btn.innerText);
+                        togglePillState(btn, isSavedActive);
+                    });
+                } catch(e) {}
+            }
+        }
+
+        // ==========================================
+        // PROMPT HISTORIE & BACKUP
+        // ==========================================
+        function getSavedApiKey() {
+            return localStorage.getItem('gemini_user_api_key') || "";
+        }
+
+        function setSavedApiKey(key) {
+            if (key) {
+                localStorage.setItem('gemini_user_api_key', key.trim());
+            } else {
+                localStorage.removeItem('gemini_user_api_key');
+            }
+            updateApiKeyUIStatus();
+        }
+
+        function updateApiKeyUIStatus() {
+            const key = getSavedApiKey();
+            const dot = document.getElementById('headerApiKeyDot');
+            const statusBadge = document.getElementById('modalKeyStatusBadge');
+            const input = document.getElementById('modalApiKeyInput');
+
+            if (input) input.value = key;
+            if (key && key.length > 5) {
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-green-500 animate-pulse";
+                if (statusBadge) {
+                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-green-100 text-green-700";
+                    statusBadge.innerText = "Aktiv verbunden";
+                }
+            } else {
+                if (dot) dot.className = "w-2 h-2 rounded-full bg-gray-400";
+                if (statusBadge) {
+                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 rounded-full bg-gray-200 text-gray-600";
+                    statusBadge.innerText = "Kein Key hinterlegt";
+                }
+            }
+        }
+
+        function openKiModal() {
+            document.getElementById('kiModal').classList.remove('hidden');
+            updateApiKeyUIStatus();
+        }
+
+        function closeKiModal() {
+            document.getElementById('kiModal').classList.add('hidden');
+        }
+
+        function openReadmeModal() {
+            document.getElementById('readmeModal').classList.remove('hidden');
+        }
+
+        function closeReadmeModal() {
+            document.getElementById('readmeModal').classList.add('hidden');
+        }
+
+        function openHistoryModal() {
+            renderPromptHistoryList();
+            document.getElementById('historyModal').classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('historyModal').classList.add('hidden');
+        }
+
+        function toggleKeyGuide() {
+            const content = document.getElementById('keyGuideContent');
+            const chevron = document.getElementById('guideChevron');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                chevron.innerText = '▲ Einklappen';
+            } else {
+                content.classList.add('hidden');
+                chevron.innerText = '▼ Ausklappen';
+            }
+        }
+
+        function saveApiKeyFromModal() {
+            const val = document.getElementById('modalApiKeyInput').value;
+            setSavedApiKey(val);
+            showToast("API-Schlüssel lokal gespeichert!");
+            closeKiModal();
+        }
+
+        function clearApiKeyFromModal() {
+            setSavedApiKey("");
+            document.getElementById('modalApiKeyInput').value = "";
+            showToast("API-Schlüssel gelöscht.", "info");
+        }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('modalApiKeyInput');
+            const label = document.getElementById('apiKeyVisibilityText');
+            if (input.type === 'password') {
+                input.type = 'text';
+                label.innerText = 'Verbergen';
+            } else {
+                input.type = 'password';
+                label.innerText = 'Zeigen';
+            }
+        }
+
+        async function copyCurrentApiKey() {
+            const key = getSavedApiKey() || document.getElementById('modalApiKeyInput').value;
+            if (!key) {
+                showToast("Kein Schlüssel hinterlegt.", "error");
+                return;
+            }
+            await copyTextToClipboard(key);
+            showToast("API-Schlüssel kopiert!");
+        }
+
+        function exportFullBackup() {
+            saveData();
+            const backupPayload = {
+                app: "KI-Unterrichtsbaukasten",
+                version: "3.0",
+                exportedAt: new Date().toISOString(),
+                gemini_user_api_key: getSavedApiKey(),
+                kiBaukastenData: JSON.parse(localStorage.getItem('kiBaukastenData_v3') || '{}'),
+                kiBaukastenProfiles: JSON.parse(localStorage.getItem('kiBaukastenProfiles_v3') || '[]'),
+                kiBaukastenHistory: JSON.parse(localStorage.getItem('kiBaukastenHistory_v3') || '[]')
+            };
+
+            const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ki-baukasten-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Backup-Datei heruntergeladen!");
+        }
+
+        function importFullBackup(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (typeof imported.gemini_user_api_key === 'string') {
+                        setSavedApiKey(imported.gemini_user_api_key);
+                    }
+                    if (imported.kiBaukastenData) {
+                        localStorage.setItem('kiBaukastenData_v3', JSON.stringify(imported.kiBaukastenData));
+                    }
+                    if (Array.isArray(imported.kiBaukastenProfiles)) {
+                        localStorage.setItem('kiBaukastenProfiles_v3', JSON.stringify(imported.kiBaukastenProfiles));
+                    }
+                    if (Array.isArray(imported.kiBaukastenHistory)) {
+                        localStorage.setItem('kiBaukastenHistory_v3', JSON.stringify(imported.kiBaukastenHistory));
+                    }
+
+                    loadSavedData();
+                    updateApiKeyUIStatus();
+                    renderSavedClassProfiles();
+                    updateHistoryBadge();
+                    checkFormValidity();
+                    showToast("Backup erfolgreich eingespielt!");
+                    closeKiModal();
+                } catch (err) {
+                    showToast("Backup konnte nicht gelesen werden.", "error");
+                } finally {
+                    event.target.value = "";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ==========================================
+        // EIGENE KLASSEN-PROFILE
+        // ==========================================
+        function getSavedClassProfiles() {
+            try {
+                const raw = localStorage.getItem('kiBaukastenProfiles_v3');
+                if (raw) return JSON.parse(raw);
+            } catch (e) {}
+            const defaults = [
+                { id: 'p1', name: '5a Deutsch (RS)', fach: 'Deutsch', klasse: 'Klasse 5', bundesland: 'Thüringen', schulform: 'Regelschule', dauer: '45 Min.', vorwissen: 'Märchen aus der Grundschule bekannt', pills: ['Viel Schüleraktivität', 'Operatoren (AFB I–III)'] },
+                { id: 'p2', name: '8b Geschichte (90m)', fach: 'Geschichte', klasse: 'Klasse 8', bundesland: 'Thüringen', schulform: 'Regelschule', dauer: '90 Min.', vorwissen: 'Absolutismus bereits abgeschlossen', pills: ['HS-/RS-Differenzierung', 'Lösungserwartung / EWH'] }
+            ];
+            localStorage.setItem('kiBaukastenProfiles_v3', JSON.stringify(defaults));
+            return defaults;
+        }
+
+        function toggleProfileCreator(forceState = null) {
+            const bar = document.getElementById('profileCreatorBar');
+            const input = document.getElementById('newProfileNameInput');
+            const show = forceState !== null ? forceState : bar.classList.contains('hidden');
+            if (show) {
+                bar.classList.remove('hidden');
+                const fach = document.getElementById('input-fach').value.trim();
+                const klasse = document.getElementById('input-klasse').value.trim();
+                input.value = `${klasse} • ${fach}`;
+                input.focus();
+                input.select();
+            } else {
+                bar.classList.add('hidden');
+            }
+        }
+
+        function saveCurrentClassProfile() {
+            const nameInput = document.getElementById('newProfileNameInput');
+            const fach = document.getElementById('input-fach').value.trim() || 'Fach';
+            const klasse = document.getElementById('input-klasse').value.trim() || 'Klasse';
+            const profileName = nameInput.value.trim() || `${klasse} • ${fach}`;
+
+            const profiles = getSavedClassProfiles();
+            profiles.push({
+                id: 'prof_' + Date.now(),
+                name: profileName,
+                fach: fach,
+                klasse: klasse,
+                bundesland: document.getElementById('input-bundesland').value,
+                schulform: document.getElementById('input-schulform').value,
+                dauer: document.getElementById('input-dauer').value,
+                vorwissen: document.getElementById('input-vorwissen').value,
+                pills: Array.from(document.querySelectorAll('.pill-btn.bg-brand-pink')).map(b => b.innerText)
             });
 
-            setTimeout(async () => {
-                const targetView = document.getElementById(`view-${step}`);
-                targetView.classList.remove('hidden');
-                void targetView.offsetWidth;
-                targetView.style.opacity = '1';
-                
-                updateStepper(step);
-                currentStep = step;
-
-                if(step === 3) {
-                    await buildAndOptimizePrompt();
-                }
-            }, 150);
+            localStorage.setItem('kiBaukastenProfiles_v3', JSON.stringify(profiles));
+            toggleProfileCreator(false);
+            renderSavedClassProfiles();
+            showToast(`Klassen-Profil „${profileName}“ gespeichert!`);
         }
 
-        function updateStepper(step) {
-            const progressBar = document.getElementById('progressBar');
-            if(step === 1) progressBar.style.width = '33.33%';
-            if(step === 2) progressBar.style.width = '66.66%';
-            if(step === 3) progressBar.style.width = '100%';
+        function applyClassProfile(profileId) {
+            const profiles = getSavedClassProfiles();
+            const prof = profiles.find(p => p.id === profileId);
+            if (!prof) return;
 
-            for(let i = 1; i <= 3; i++) {
-                const indicator = document.getElementById(`indicator-${i}`);
-                const label = document.getElementById(`label-${i}`);
-                if(i <= step) {
-                    indicator.classList.remove('border-gray-300', 'text-gray-500', 'bg-white');
-                    indicator.classList.add('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
-                    if(label) label.classList.replace('text-gray-400', 'text-brand-dark');
-                } else {
-                    indicator.classList.remove('border-brand-pinkDark', 'bg-brand-pinkDark', 'text-white');
-                    indicator.classList.add('border-gray-300', 'text-gray-500', 'bg-white');
-                    if(label) label.classList.replace('text-brand-dark', 'text-gray-400');
-                }
-            }
+            document.getElementById('input-fach').value = prof.fach || '';
+            document.getElementById('input-klasse').value = prof.klasse || 'Klasse 5';
+            document.getElementById('input-bundesland').value = prof.bundesland || 'Thüringen';
+            document.getElementById('input-schulform').value = prof.schulform || 'Regelschule';
+            document.getElementById('input-dauer').value = prof.dauer || '45 Min.';
+            if (prof.vorwissen) document.getElementById('input-vorwissen').value = prof.vorwissen;
+
+            document.querySelectorAll('.pill-btn').forEach(btn => {
+                const isSelected = Array.isArray(prof.pills) && prof.pills.includes(btn.innerText);
+                togglePillState(btn, isSelected);
+            });
+
+            saveData();
+            checkFormValidity();
+            showToast(`Profil „${prof.name}“ geladen!`);
         }
 
-        function compilePromptParameters() {
-            const fach = document.getElementById('input-fach').value;
-            const inputKlasse = document.getElementById('input-klasse').value;
-            const bundesland = document.getElementById('input-bundesland').value;
-            const schulform = document.getElementById('input-schulform').value;
-            const thema = document.getElementById('input-thema').value;
-            const lernziel = document.getElementById('input-lernziel').value;
-            const dynamicInput = document.getElementById('input-dynamic').value;
-            const activePills = Array.from(document.querySelectorAll('.pill-btn.bg-brand-pink')).map(btn => btn.innerText);
-
-            return {
-                fach,
-                klasse: inputKlasse,
-                bundesland,
-                schulform,
-                thema,
-                lernziel,
-                dynamicInput,
-                activePills,
-                tool: selectedTaskName
-            };
+        function deleteClassProfile(profileId, event) {
+            event.stopPropagation();
+            const profiles = getSavedClassProfiles().filter(p => p.id !== profileId);
+            localStorage.setItem('kiBaukastenProfiles_v3', JSON.stringify(profiles));
+            renderSavedClassProfiles();
+            showToast("Klassen-Profil gelöscht.", "info");
         }
 
-        function generateLocalFallbackPrompt(params) {
-            let pillText = params.activePills.length > 0 ? `\n• Besondere Schwerpunkte: ${params.activePills.join(', ')}` : '';
-            let extraText = params.dynamicInput.trim() ? `\n• Spezifische Zusatzvorgabe: ${params.dynamicInput}` : '';
+        function renderSavedClassProfiles() {
+            const container = document.getElementById('savedProfilesList');
+            if (!container) return;
+            const profiles = getSavedClassProfiles();
 
-            let specificInstructions = "Erstelle ein vollständiges, methodisch fundiertes Material.";
-            if (params.tool === "Lerngrafik") {
-                specificInstructions = "Generiere direkt eine didaktisch reduzierte, visuell ansprechende Infografik/Lerngrafik als Bildausgabe im Chat. Die Grafik muss eine klare visuelle Struktur, Merkmalskästen/Pfeile und fehlerfreie, gut lesbare deutsche Fachbegriffe enthalten. Ergänze darunter stichpunktartig die didaktische Tafelbild-Gliederung.";
-            } else if (params.tool === "Bewertungsraster") {
-                specificInstructions = "Erstelle ein differenziertes Bewertungsraster (Rubric) zwingend als Markdown-Tabelle mit Kriterien und 4 konkreten, schülerverständlichen Niveaustufen.";
-            } else if (params.tool === "Exit-Ticket") {
-                specificInstructions = "Entwirf ein 3-minütiges Exit-Ticket mit 2 fokussierten Fragen zur Überprüfung des Lernziels sowie einer kurzen Selbsteinschätzung.";
-            }
-
-            return `Du agierst als erfahrene Fachdidaktik-Lehrkraft für das Fach ${params.fach}.
-
-Erstelle passgenaues Material vom Typ "${params.tool}" für folgende Lerngruppe:
-• Schulform & Bundesland: ${params.schulform}, ${params.bundesland}
-• Jahrgangsstufe: ${params.klasse}
-• Unterrichtsthema: ${params.thema}
-• Zentrales Lernziel: ${params.lernziel}${pillText}${extraText}
-
-ARBEITSAUFTRAG:
-${specificInstructions}
-
-FORMATIERUNG:
-Formatiere das Ergebnis übersichtlich in Markdown, damit es direkt in den Unterricht übernommen werden kann.`;
-        }
-
-        async function buildAndOptimizePrompt() {
-            const params = compilePromptParameters();
-            document.getElementById('result-title-task').innerText = params.tool;
-
-            const promptBox = document.getElementById('promptText');
-            const loader = document.getElementById('geminiPromptLoader');
-            const statusBadge = document.getElementById('geminiLiveStatusBadge');
-
-            const fallbackPrompt = generateLocalFallbackPrompt(params);
-            const userApiKey = getSavedApiKey();
-
-            // Falls kein API-Key hinterlegt ist, direkt Fallback nutzen
-            if (!userApiKey) {
-                promptBox.innerText = fallbackPrompt;
-                statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-semibold rounded-full hover:bg-amber-100 transition-colors";
-                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>Standard-Vorlage (Hier klicken für Gemini-Key)</span>`;
+            if (profiles.length === 0) {
+                container.innerHTML = `<span class="text-xs text-gray-400 italic">Noch keine eigene Klasse gemerkt.</span>`;
                 return;
             }
 
-            promptBox.classList.add('hidden');
-            loader.classList.remove('hidden');
+            container.innerHTML = profiles.map(p => `
+                <div onclick="applyClassProfile('${p.id}')" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white border border-gray-300 hover:border-brand-pinkDark hover:bg-brand-pink/50 text-xs font-semibold text-brand-dark transition-all">
+                    <span>${escapeHtml(p.name)}</span>
+                    <button type="button" onclick="deleteClassProfile('${p.id}', event)" class="text-gray-400 hover:text-red-600 font-bold ml-1" title="Löschen">×</button>
+                </div>
+            `).join('');
+        }
 
-            statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-pink-50 border border-brand-pinkDark/40 text-brand-dark text-xs font-semibold rounded-full";
-            statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-brand-pinkDark animate-spin"></span><span>Gemini formuliert Prompt...</span>`;
-
+        // ==========================================
+        // PROMPT HISTORIE
+        // ==========================================
+        function getPromptHistory() {
             try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${encodeURIComponent(userApiKey)}`;
-
-                const systemInstruction = `Du bist ein professioneller Prompt-Engineer für Lehrkräfte. Deine Aufgabe ist es NICHT, das Unterrichtsmaterial selbst zu erstellen, sondern einen EXTREM PRÄZISEN, SOFORT KOPIERBAREN PROMPT zu schreiben, den die Lehrkraft in externe KIs (ChatGPT oder Gemini) einfügen kann.
-Regeln:
-1. Der Prompt muss direkt mit der Rolle an die Ziel-KI beginnen (z.B. 'Agiere als...').
-2. Binde Fach, Klasse, Bundesland (${params.bundesland}), Thema und Lernziel nahtlos ein.
-3. Bei 'Lerngrafik': Der Prompt wird direkt in ChatGPT oder Gemini eingefügt. Weise die Ziel-KI an, die didaktische Infografik/Lerngrafik direkt als Bild im Chat zu generieren (mit klaren, lesbaren deutschen Beschriftungen, schülergerechtem Vektor-/Poster-Stil, logischen Pfeilen und Merkmalskästen) und darunter die inhaltliche Tafelbild-Struktur stichpunktartig darzustellen. Keine Verweise auf Midjourney oder externe Tools.
-4. Bei 'Bewertungsraster' oder 'Stundenverlauf': Fordere zwingend Markdown-Tabellen.
-5. Gib AUSSCHLIESSLICH den fertigen, sofort kopierbaren Prompt-Text aus. Keine einleitenden Sätze wie 'Hier ist dein Prompt:'.`;
-
-                const userQuery = `Erstelle einen Experten-Prompt für das Tool '${params.tool}'.
-Fach: ${params.fach}
-Klasse: ${params.klasse}
-Schulform: ${params.schulform} in ${params.bundesland}
-Thema: ${params.thema}
-Lernziel: ${params.lernziel}
-Zusatzwünsche: ${params.dynamicInput || 'keine'}
-Besonderer Fokus: ${params.activePills.join(', ') || 'Standard'}`;
-
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemInstruction }] }
-                };
-
-                const res = await fetchWithBackoff(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const data = await res.json();
-                const optimizedPrompt = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (optimizedPrompt && optimizedPrompt.trim().length > 30) {
-                    promptBox.innerText = optimizedPrompt.trim();
-                    statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-green-50 border border-green-300 text-green-700 text-xs font-semibold rounded-full hover:bg-green-100 transition-colors";
-                    statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span>⚡ Durch Gemini KI optimiert</span>`;
-                } else {
-                    promptBox.innerText = fallbackPrompt;
-                    statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-gray-50 border border-gray-300 text-gray-600 text-xs font-semibold rounded-full hover:bg-gray-100 transition-colors";
-                    statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-gray-400"></span><span>Standard-Vorlage</span>`;
-                }
-            } catch (err) {
-                console.warn('Gemini API Fehler:', err);
-                promptBox.innerText = fallbackPrompt;
-                statusBadge.className = "cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-auto px-3 py-1 bg-red-50 border border-red-300 text-red-700 text-xs font-semibold rounded-full hover:bg-red-100 transition-colors";
-                statusBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500"></span><span>Key prüfen / Standard-Vorlage</span>`;
-            } finally {
-                loader.classList.add('hidden');
-                promptBox.classList.remove('hidden');
+                return JSON.parse(localStorage.getItem('kiBaukastenHistory_v3') || '[]');
+            } catch (e) {
+                return [];
             }
         }
 
-        async function refineCurrentPromptWithGemini() {
-            await buildAndOptimizePrompt();
+        function addPromptToHistory(params, promptText, isGemini) {
+            if (!promptText || !promptText.trim()) return;
+            const history = getPromptHistory();
+            if (history.length > 0 && history[0].promptText === promptText.trim()) return;
+
+            history.unshift({
+                id: 'hist_' + Date.now(),
+                timestamp: new Date().toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                tool: params.tool,
+                fach: params.fach,
+                klasse: params.klasse,
+                thema: params.thema,
+                promptText: promptText.trim()
+            });
+
+            localStorage.setItem('kiBaukastenHistory_v3', JSON.stringify(history.slice(0, 10)));
+            updateHistoryBadge();
         }
 
-        async function fetchWithBackoff(url, options, maxRetries = 2) {
-            let delay = 1000;
-            for (let i = 0; i <= maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return response;
-                    if (response.status === 429 && i < maxRetries) {
-                        await new Promise(res => setTimeout(res, delay));
-                        delay *= 2;
-                        continue;
-                    }
-                    return response;
-                } catch (err) {
-                    if (i === maxRetries) throw err;
-                    await new Promise(res => setTimeout(res, delay));
-                    delay *= 2;
-                }
+        function updateHistoryBadge() {
+            const badge = document.getElementById('historyCountBadge');
+            if (!badge) return;
+            const count = getPromptHistory().length;
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
             }
         }
 
-        async function copyPrompt() {
-            const textToCopy = document.getElementById('promptText').innerText;
-            const btn = document.getElementById('copyBtn');
-            const originalHTML = btn.innerHTML;
-            
-            const showSuccess = () => {
-                btn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="copy-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Erfolgreich kopiert!
-                    <div class="absolute inset-0 rounded-xl bg-green-500 -z-10 translate-x-[4px] translate-y-[4px]"></div>
-                `;
-                btn.classList.add('bg-green-600', 'border-green-600', 'text-white');
-                btn.classList.remove('bg-brand-dark', 'border-brand-dark');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('bg-green-600', 'border-green-600');
-                    btn.classList.add('bg-brand-dark', 'border-brand-dark');
-                }, 3000); 
-            };
+        function renderPromptHistoryList() {
+            const container = document.getElementById('historyListContainer');
+            const history = getPromptHistory();
 
+            if (history.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-gray-400 text-xs sm:text-sm">Noch keine Prompts im Verlauf gespeichert.</div>`;
+                return;
+            }
+
+            container.innerHTML = history.map((item, idx) => `
+                <div class="border border-gray-200 rounded-2xl p-3 bg-gray-50 hover:border-brand-pinkDark transition-all">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="px-2 py-0.5 bg-brand-pink border border-brand-pinkDark rounded-full text-[11px] font-bold text-brand-dark">${escapeHtml(item.tool)}</span>
+                        <span class="text-[10px] text-gray-400 font-mono">${escapeHtml(item.timestamp)}</span>
+                    </div>
+                    <p class="text-xs font-bold text-brand-dark mb-1">${escapeHtml(item.fach)} • ${escapeHtml(item.klasse)}: ${escapeHtml(item.thema)}</p>
+                    <p class="text-[11px] text-gray-500 line-clamp-2 font-mono bg-white p-2 rounded-lg border border-gray-200 mb-2">${escapeHtml(item.promptText)}</p>
+                    <button onclick="copyPromptFromHistory(${idx})" class="px-3 py-1 bg-white border border-gray-300 text-brand-dark rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors">
+                        Prompt kopieren
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function copyPromptFromHistory(index) {
+            const item = getPromptHistory()[index];
+            if (!item) return;
+            await copyTextToClipboard(item.promptText);
+            showToast("Prompt aus dem Verlauf kopiert!");
+        }
+
+        function clearPromptHistory() {
+            localStorage.removeItem('kiBaukastenHistory_v3');
+            updateHistoryBadge();
+            renderPromptHistoryList();
+            showToast("Verlauf geleert.", "info");
+        }
+
+        async function copyTextToClipboard(text) {
             if (navigator.clipboard && window.isSecureContext) {
                 try {
-                    await navigator.clipboard.writeText(textToCopy);
-                    showSuccess();
-                    return;
-                } catch (err) {
-                    console.warn('Async clipboard failed, trying fallback...');
-                }
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (err) {}
             }
-            
             const textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
+            textArea.value = text;
             textArea.style.position = 'fixed';
             textArea.style.opacity = '0';
             document.body.appendChild(textArea);
             textArea.select();
-            
             try {
-                if (document.execCommand('copy')) showSuccess();
+                document.execCommand('copy');
+                return true;
             } catch (err) {
-                console.error('Fallback copy failed');
+                return false;
             } finally {
                 document.body.removeChild(textArea);
             }
         }
 
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
         function startOver() {
             goToStep(1);
         }
-
     </script>
 </body>
 </html>
